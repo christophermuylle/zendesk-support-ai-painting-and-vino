@@ -1,0 +1,76 @@
+# ---------------------------------------------------------------------------
+# Managed locations - Painting and Vino
+# ---------------------------------------------------------------------------
+# Checked top to bottom against the ticket subject + latest customer
+# message; first match wins. Each location's pricing/booking/venue details
+# live in their own file under config/knowledge-base/locations/<file>,
+# combined with config/knowledge-base/shared.md when the AI drafts a reply.
+#
+# NOTE: sourced from https://paintingandvino.com/locations/ and each
+# location's own page - confirm these are current and complete.
+#
+# FLAGGED FOR YOU:
+#  - Phoenix, AZ and Temecula, CA currently show no scheduled events on
+#    their pages ("0 events found") - may be inactive/newly launched.
+#    Temecula appears to be covered by the Riverside County page/team
+#    rather than having its own calendar - confirmed with a match keyword
+#    below, but double check this is still accurate.
+#  - Chattanooga, TN is listed as "coming soon" (per you, Sep 2026) - no
+#    page/content exists yet, so its file just tells the AI to say it's
+#    not open yet rather than guessing.
+#  - Does Painting and Vino have any self-managed/excluded locations, the
+#    way some Wine and Canvas locations do? None identified yet - if there
+#    are any, add an out_of_scope_location rule to rules.yaml like the
+#    Wine and Canvas deployment has.
+# ---------------------------------------------------------------------------
+
+locations:
+  - slug: tucson
+    display_name: "Tucson, AZ"
+    file: tucson.md
+    match_keywords: ["tucson", "oro valley"]
+
+  - slug: phoenix
+    display_name: "Phoenix, AZ"
+    file: phoenix.md
+    match_keywords: ["phoenix"]
+
+  - slug: los-angeles
+    display_name: "Los Angeles, CA"
+    file: los-angeles.md
+    match_keywords: ["los angeles", "l.a. county", "la county", "arcadia, ca", "santa monica"]
+
+  - slug: orange-county
+    display_name: "Orange County, CA"
+    file: orange-county.md
+    match_keywords: ["orange county", "anaheim", "huntington beach", "newport beach"]
+
+  - slug: sacramento
+    display_name: "Sacramento, CA"
+    file: sacramento.md
+    match_keywords: ["sacramento", "rocklin", "roseville", "lincoln, ca", "woodland, ca"]
+
+  - slug: san-diego
+    display_name: "San Diego, CA"
+    file: san-diego.md
+    match_keywords: ["san diego", "la jolla", "carlsbad", "del mar"]
+
+  - slug: san-francisco-bay
+    display_name: "San Francisco Bay Area, CA"
+    file: san-francisco-bay.md
+    match_keywords: ["san francisco", "bay area", "sf bay", "pacifica", "menlo park", "scotts valley", "redwood city", "san jose"]
+
+  - slug: riverside-county
+    display_name: "Riverside County, CA"
+    file: riverside-county.md
+    match_keywords: ["riverside county", "riverside, ca", "temecula"]
+
+  - slug: kansas-city
+    display_name: "Kansas City, MO"
+    file: kansas-city.md
+    match_keywords: ["kansas city", "lee's summit", "lees summit", "kearney, mo"]
+
+  - slug: chattanooga
+    display_name: "Chattanooga, TN"
+    file: chattanooga.md
+    match_keywords: ["chattanooga"]
