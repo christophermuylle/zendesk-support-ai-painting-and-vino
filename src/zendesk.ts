@@ -25,7 +25,7 @@ export interface IZendeskClient {
   postComment(
     ticketId: number,
     body: string,
-    opts: { isPublic: boolean; status?: ActionType; addTags?: string[] }
+    opts: { isPublic: boolean; status?: ActionType; addTags?: string[]; fields?: Array<{ id: number; value: string | null }> }
   ): Promise<void>;
   /** Update status, tags, and/or custom fields WITHOUT posting a comment (used for out-of-scope tickets and rule-driven field updates like order confirmations). */
   updateTicket(
@@ -102,7 +102,7 @@ export class ZendeskClient implements IZendeskClient {
   async postComment(
     ticketId: number,
     body: string,
-    opts: { isPublic: boolean; status?: ActionType; addTags?: string[] }
+    opts: { isPublic: boolean; status?: ActionType; addTags?: string[]; fields?: Array<{ id: number; value: string | null }> }
   ): Promise<void> {
     const statusMap: Record<string, string> = { solve: "solved", pending: "pending", escalate: "open" };
     const ticket: Record<string, unknown> = {
@@ -113,6 +113,9 @@ export class ZendeskClient implements IZendeskClient {
     }
     if (opts.addTags?.length) {
       ticket.additional_tags = opts.addTags;
+    }
+    if (opts.fields?.length) {
+      ticket.fields = opts.fields;
     }
     await this.request(`/tickets/${ticketId}.json`, {
       method: "PUT",

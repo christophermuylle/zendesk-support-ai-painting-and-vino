@@ -38,13 +38,13 @@ class MockZendeskClient implements IZendeskClient {
   async postComment(
     ticketId: number,
     body: string,
-    opts: { isPublic: boolean; status?: ActionType; addTags?: string[] }
+    opts: { isPublic: boolean; status?: ActionType; addTags?: string[]; fields?: Array<{ id: number; value: string | null }> }
   ): Promise<void> {
-    console.log(`\n  -> would post comment (public=${opts.isPublic}, status=${opts.status ?? "unchanged"}, tags=${opts.addTags?.join(",") ?? "-"}):`);
+    console.log(`\n  -> would post comment (public=${opts.isPublic}, status=${opts.status ?? "unchanged"}, tags=${opts.addTags?.join(",") ?? "-"}, fields=${JSON.stringify(opts.fields ?? [])}):`);
     console.log(`     "${body.replace(/\n/g, "\n     ")}"`);
   }
-  async updateTicket(ticketId: number, opts: { status?: string; addTags?: string[] }): Promise<void> {
-    console.log(`\n  -> would set status=${opts.status ?? "unchanged"}, tags+=${opts.addTags?.join(",") ?? "-"}, no reply (out of scope)`);
+  async updateTicket(ticketId: number, opts: { status?: string; addTags?: string[]; fields?: Array<{ id: number; value: string | null }> }): Promise<void> {
+    console.log(`\n  -> would set status=${opts.status ?? "unchanged"}, tags+=${opts.addTags?.join(",") ?? "-"}, fields=${JSON.stringify(opts.fields ?? [])}, no reply (out of scope)`);
   }
 }
 
@@ -179,6 +179,29 @@ const scenarios: { label: string; ctx: TicketContext }[] = [
       },
       requester: { id: CUSTOMER_ID, name: "Jordan Customer", email: "jordan@example.com" },
       comments: [makeComment("How much does a paint and sip event cost in Sacramento?", CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
+  {
+    label: "Licensee application submission (should send fixed RECEIVED reply, no AI)",
+    ctx: {
+      ticket: {
+        id: 8,
+        subject: "New submission from Licensee Application",
+        description: "Name\nJordan Applicant\nEmail\njordan@example.com\nHow did you hear about this opportunity?\nGoogle",
+        status: "new",
+        requester_id: CUSTOMER_ID,
+        tags: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Jordan Applicant", email: "jordan@example.com" },
+      comments: [
+        makeComment(
+          "Name\nJordan Applicant\nEmail\njordan@example.com\nHow did you hear about this opportunity?\nGoogle",
+          CUSTOMER_ID
+        ),
+      ],
       brand: "painting_and_vino",
     },
   },

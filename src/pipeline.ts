@@ -7,7 +7,12 @@ import type { RulesEngine } from "./rules.js";
 import type { LocationResolver } from "./locations.js";
 import type { IZendeskClient, ZendeskStatus } from "./zendesk.js";
 import type { Mode } from "./config.js";
-import { ORDER_CONFIRMATION_FIELD_ID, ORDER_CONFIRMATION_FIELD_VALUE } from "./config.js";
+import {
+  ORDER_CONFIRMATION_FIELD_ID,
+  ORDER_CONFIRMATION_FIELD_VALUE,
+  LICENSEE_INITIAL_RESPONSE_FIELD_VALUE,
+  LICENSEE_INITIAL_RESPONSE_TEXT,
+} from "./config.js";
 import type { DraftResult, RuleDecision, TicketContext } from "./types.js";
 import { extractOrderTotal } from "./util.js";
 
@@ -15,10 +20,11 @@ export interface PipelineResult {
   ticketId: number;
   ruleDecision: RuleDecision;
   matchedLocation: string | null;
-  // Absent when the rules engine short-circuited to "no_action" or
-  // "order_confirmation" (e.g. an out-of-scope-location ticket, or an
-  // automated new-order notification) - the AI is never called for those,
-  // so there's nothing to draft and no cost incurred.
+  // Absent when the rules engine short-circuited to "no_action",
+  // "order_confirmation", or "licensee_initial_response" (e.g. an
+  // out-of-scope-location ticket, an automated new-order notification, or
+  // an automated licensee-application notification) - the AI is never
+  // called for those, so there's nothing to draft and no cost incurred.
   draft?: DraftResult;
   finalAction:
     | "posted_public_reply"
@@ -26,6 +32,7 @@ export interface PipelineResult {
     | "skipped_out_of_scope"
     | "order_confirmation_solved"
     | "order_confirmation_left_open"
+    | "licensee_initial_response_sent"
     | "no_op";
   mode: Mode;
 }
@@ -97,6 +104,35 @@ export async function processTicket(deps: PipelineDeps, ticketId: number): Promi
       ruleDecision,
       matchedLocation: null,
       finalAction: status === "solved" ? "order_confirmation_solved" : "order_confirmation_left_open",
+      mode: deps.mode,
+    };
+  }
+
+  // "licensee_initial_response" is a purely mechanical rule for automated
+  // "New submission from Licensee Application" notification tickets from
+  // the storefront's licensee application form - it's not a real support
+  // question, so no AI draft. Unlike order_confirmation, this DOES send an
+  // actual public reply, because that's the whole point: it's a fixed
+  // deliverability-check message ("please respond RECEIVED") that Christopher
+  // already sends by hand via Zendesk's own "Licensee Initial Response"
+  // macro for every single one of these tickets, with zero variation - see
+  // config.ts for the source. Categorizes the ticket (auto-applies the
+  // "Artist, Licensee or Venue" reason/tag) and solves it, matching exactly
+  // what that macro does. Runs in both draft and auto mode alike, same as
+  // order_confirmation - this bypasses the usual MODE=draft human-review
+  // hold because it's a fixed template, not an AI judgment call.
+  if (ruleDecision.action === "licensee_initial_response") {
+    await deps.zendesk.postComment(ticketId, LICENSEE_INITIAL_RESPONSE_TEXT, {
+      isPublic: true,
+      status: "solve",
+      addTags: ruleDecision.addTags,
+      fields: [{ id: ORDER_CONFIRMATION_FIELD_ID, value: LICENSEE_INITIAL_RESPONSE_FIELD_VALUE }],
+    });
+    return {
+      ticketId,
+      ruleDecision,
+      matchedLocation: null,
+      finalAction: "licensee_initial_response_sent",
       mode: deps.mode,
     };
   }

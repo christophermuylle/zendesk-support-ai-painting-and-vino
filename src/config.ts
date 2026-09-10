@@ -37,6 +37,20 @@ export type Mode = "draft" | "auto";
 export const ORDER_CONFIRMATION_FIELD_ID = Number(process.env.ORDER_CONFIRMATION_FIELD_ID ?? 114096070134);
 export const ORDER_CONFIRMATION_FIELD_VALUE = process.env.ORDER_CONFIRMATION_FIELD_VALUE ?? "order_confirmation";
 
+// Same "Reason for Customer Contacting Us" tagger field (114096070134) used
+// by the "licensee_initial_response" rule action (see src/pipeline.ts), just
+// a different option value - matches Zendesk's own "Licensee Initial
+// Response" macro (id 43362301834899) on Painting and Vino, confirmed
+// against real tickets #81030 and #81022 (both tagged
+// artist__licensee_or_venue after that macro was applied by hand). The
+// macro's reply text is copied verbatim below so the automated version
+// matches what Christopher already sends for every one of these.
+export const LICENSEE_INITIAL_RESPONSE_FIELD_VALUE =
+  process.env.LICENSEE_INITIAL_RESPONSE_FIELD_VALUE ?? "artist__licensee_or_venue";
+export const LICENSEE_INITIAL_RESPONSE_TEXT =
+  process.env.LICENSEE_INITIAL_RESPONSE_TEXT ??
+  'Please respond with "RECEIVED" so we know you are receiving our responses.';
+
 export const env = {
   zendesk: {
     subdomain: required("ZENDESK_SUBDOMAIN"),

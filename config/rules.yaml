@@ -11,7 +11,8 @@
 #   all_keywords     - fires only if the message contains ALL of these
 #   tags             - fires if the ticket already has any of these Zendesk tags
 #
-# action: solve | pending | escalate | no_action | order_confirmation
+# action: solve | pending | escalate | no_action | order_confirmation |
+#         licensee_initial_response
 #   solve               - AI answers the question and the ticket is marked Solved
 #   pending             - AI replies (usually asking for info) and ticket goes to
 #                         Pending, i.e. "waiting on the customer"
@@ -30,6 +31,16 @@
 #                         then Solves the ticket if the order total is > $0, or
 #                         leaves it Open for Bonnie if it's $0/unparseable. See
 #                         src/pipeline.ts's order_confirmation branch.
+#   licensee_initial_response - for automated "New submission from Licensee
+#                         Application" notification tickets, not a real
+#                         support question: no AI call. Posts the fixed
+#                         "please respond RECEIVED" reply (matching Zendesk's
+#                         own "Licensee Initial Response" macro verbatim),
+#                         sets the "Reason for Customer Contacting Us" field
+#                         to Artist, Licensee or Venue, and Solves the
+#                         ticket - in both draft and auto mode, since it's a
+#                         fixed template, not an AI judgment call. See
+#                         src/pipeline.ts's licensee_initial_response branch.
 #
 # force_human_review: true means this rule NEVER auto-sends, regardless of MODE.
 # add_tags: tags to stamp on the ticket when this rule fires (for reporting).
@@ -59,6 +70,24 @@ rules:
     match:
       any_keywords: ["new order"]
     action: order_confirmation
+    force_human_review: false
+
+  # Automated "New submission from Licensee Application" notification
+  # tickets from the storefront's licensee application form - these are
+  # form-fill notifications, not a real support question, so this is
+  # matched and handled right after order confirmations (Christopher's
+  # rule: "New submission from Licensee Application emails. Send Painting
+  # and Vino's initial licensee response and have it include the following
+  # snippet: Please respond with 'RECEIVED' so we know you are receiving
+  # our responses. This will help us confirm the emails are hitting their
+  # inbox." - confirmed via Zendesk's own "Licensee Initial Response" macro
+  # and real tickets #81030/#81022, where Christopher sends exactly this
+  # text by hand every time). Painting and Vino only for now - not ported
+  # to Wine and Canvas unless asked. See action doc above.
+  - name: licensee_initial_response
+    match:
+      any_keywords: ["new submission from licensee application"]
+    action: licensee_initial_response
     force_human_review: false
 
   - name: refund_or_cancellation_request
