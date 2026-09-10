@@ -22,10 +22,13 @@ export function getTicketMatchText(ctx: TicketContext): string {
  * matches the standalone word "Total" so it does NOT match "Subtotal:" -
  * `\b` doesn't break between the "b" and "t" of "Subtotal" since both are
  * word characters, so only a line that starts with "Total" matches.
- * Returns null if no such line is found or it doesn't parse as a number.
+ * The separator between "Total:" and the dollar amount is matched loosely
+ * ([\s|]*) since some brands' order emails render this as a markdown
+ * table (e.g. "| Total: | $76.00 |"), not just whitespace. Returns null if
+ * no such line is found or it doesn't parse as a number.
  */
 export function extractOrderTotal(text: string): number | null {
-  const match = (text ?? "").match(/\btotal:\s*\$?\s*([\d,]+\.\d{2})/i);
+  const match = (text ?? "").match(/\btotal:[\s|]*\$?[\s|]*([\d,]+\.\d{2})/i);
   if (!match) return null;
   const value = Number(match[1].replace(/,/g, ""));
   return Number.isNaN(value) ? null : value;
