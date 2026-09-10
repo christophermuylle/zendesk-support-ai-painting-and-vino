@@ -8,6 +8,7 @@ Most standard classes: $45. Specialty events (e.g. "Paint your pet"): $55.
 Drinks-included options: $60.
 
 ## Booking
+Direct link: https://paintingandvino.com/orange-county-paint-and-sip/
 Book through the event listing's "Get Tickets" button - each event has its
 own registration page. Seating is limited per class, so booking in advance
 is recommended. Exact venue/address is always listed on the event page.

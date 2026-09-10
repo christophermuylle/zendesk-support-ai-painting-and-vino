@@ -9,6 +9,7 @@ tell the customer you'll confirm pricing, or point them to the event
 listings on the site.
 
 ## Booking
+Direct link: https://paintingandvino.com/riverside-county-paint-and-sip/
 Book through the event listing's "Get Tickets" button - each event has its
 own registration page. Seating is limited per class, so booking in advance
 is recommended.

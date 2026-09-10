@@ -7,6 +7,7 @@ current before relying on it.
 Range: $25-$50, with some premium events up to $60.
 
 ## Booking
+Direct link: https://paintingandvino.com/san-francisco-bay-paint-and-sip/
 Book through the event listing's "Get Tickets" button - each event has its
 own registration page. Seating is limited per class, so booking in advance
 is recommended.

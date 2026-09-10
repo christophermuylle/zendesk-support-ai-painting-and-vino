@@ -8,6 +8,7 @@ Range: $45-$100 depending on the specific event/venue - check the
 individual event listing for exact price.
 
 ## Booking
+Direct link: https://paintingandvino.com/san-diego-county-paint-and-sip/
 Book through the event listing's "Get Tickets" button - each event has its
 own registration page. Seating is limited per class, so booking in advance
 is recommended.

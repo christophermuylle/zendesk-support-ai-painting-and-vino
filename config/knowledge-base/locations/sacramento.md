@@ -7,6 +7,7 @@ it.
 Standard events: $45/person.
 
 ## Booking
+Direct link: https://paintingandvino.com/sacramento-paint-and-sip/
 Book through the event listing's "Get Tickets" button - each event has its
 own registration page. Seating is limited per class, so booking in advance
 is recommended.
