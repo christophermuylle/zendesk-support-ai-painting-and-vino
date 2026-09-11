@@ -19,8 +19,12 @@ Pitfire Pizza (Carlsbad), DoubleTree (Del Mar).
 
 ## Private events
 Available for birthdays, bachelorette parties, bridal showers, and
-corporate team-building - direct the customer to "request a quote." No
-fixed minimum group size found on the location page.
+corporate team-building. Minimum group size: 8 guests (see shared.md's
+Private events section for the full pricing table and reply structure).
+No dedicated venue list on file for San Diego - if the customer needs a
+venue, say we'll send a list of partners once we confirm which artist is
+available (per the team's own macro wording), rather than inventing a
+link.
 
 ## What's included
 All art supplies and professional instruction. Food/drinks available for

@@ -20,8 +20,13 @@ Modern Mexican (Tucson), Westward Look Wyndham Grand Resort (Tucson).
 
 ## Private events
 Available for birthdays, bachelorette celebrations, and corporate
-gatherings - direct the customer to request a quote. No fixed minimum
-group size found on the location page.
+gatherings. Minimum group size: **10 guests** (confirmed via Zendesk
+macro - higher than the 8-person default; see shared.md's Private events
+section for full pricing tiers and reply structure).
+
+Venue lists (send when the customer needs a venue):
+- Restaurant list: https://drive.google.com/file/d/1YDn5lf_T0NpqyzToFZU5em7SOKjqa1mF/view?usp=sharing
+- Pricing/project list: https://drive.google.com/file/d/1bNQ26jfKvNsl8kQuSJWrg0jv6qTp6iJr/view?usp=sharing
 
 ## What's included
 All art supplies and guided instruction. Food/drinks available for

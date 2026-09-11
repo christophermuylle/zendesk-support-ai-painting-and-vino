@@ -18,10 +18,13 @@ Hemma (Kansas City), Rustic Retreat (Kearney), Lilly's Cantina (Kansas
 City).
 
 ## Private events
-Request a quote at paintingandvino.com/private-events-paint-party/request-a-quote/.
-No fixed minimum group size found on the location page. Good for
-birthdays, bachelorette parties, bridal showers, and corporate
-team-building.
+Good for birthdays, bachelorette parties, bridal showers, and corporate
+team-building. Minimum group size: 8 guests. Kansas City runs its own
+lower pricing tier (see shared.md's Private events section for the full
+table and reply structure).
+
+Venue list (send when the customer needs a venue):
+https://drive.google.com/file/d/18KzW9OAIjSl9xBfU9HNxa94BkYVfcAbU/view?usp=sharing
 
 ## What's included
 All art supplies and guided instruction. Food/drinks available for

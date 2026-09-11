@@ -19,8 +19,11 @@ Viceroy Hotel (Santa Monica), Green Cheek Beer Co. (Orange, Sunset Beach).
 
 ## Private events
 Available for birthdays, bachelorette parties, and corporate
-team-building - direct the customer to "request a quote." No fixed
-minimum group size found on the location page.
+team-building. Minimum group size: 8 guests (see shared.md's Private
+events section for the full pricing table and reply structure).
+
+Venue list (send when the customer needs a venue):
+https://drive.google.com/file/d/1doScHbxiC546AQsrZoD5L3h2S2Nwo2Xy/view?usp=sharing
 
 ## What's included
 All art supplies and guided instruction. Food/drinks available for

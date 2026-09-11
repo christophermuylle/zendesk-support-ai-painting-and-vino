@@ -18,8 +18,12 @@ Various partner locations from Anaheim to Huntington Beach and Newport
 Beach.
 
 ## Private events
-Available for birthdays and other celebrations - direct the customer to
-"request a quote." No fixed minimum group size found on the location page.
+Available for birthdays and other celebrations. Minimum group size: 8
+guests (see shared.md's Private events section for the full pricing table
+and reply structure). No dedicated venue list on file for Orange County -
+if the customer needs a venue, say we'll send a list of partners once we
+confirm which artist is available (per the team's own macro wording),
+rather than inventing a link.
 
 ## What's included
 All art supplies and guided instruction. Food/drinks available for

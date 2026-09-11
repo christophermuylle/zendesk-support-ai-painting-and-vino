@@ -145,27 +145,69 @@ We're 100% mobile (no studio) - we bring supplies to the customer's home,
 office, or a venue of their choice; we don't provide food, beverages,
 tables, or chairs. If the customer needs a venue, we have a list of
 partner restaurants/venues (usually no rental cost - guests are expected
-to buy food/drinks there); send them to customer service or the
-location's private-events contact for that list.
+to buy food/drinks there); each location's file below has that location's
+venue link(s), if one is on file.
+
+For a private/corporate event pricing inquiry (guest count, event date,
+company name, "team building"/"corporate"/"celebration" language - this
+is what the event_booking_question rule's "private event" match usually
+catches), draft a full quote reply rather than just saying "someone will
+follow up" - this is what Bonnie's real "Private Event Inquiry" Zendesk
+macros send every time, confirmed against ticket #81048 (Tucson, corporate
+team-building for Bandera Healthcare's MDS nurses, 17 guests, 11/19/2026 -
+Bonnie's actual reply quoted $50/person, the corporate 8-29-guest tier,
+with Tucson's 10-guest minimum, and pointed to Tucson's restaurant +
+pricing/project list links). Match that shape:
+
+1. Thank them for reaching out, briefly note we're fully mobile (bring
+   canvases, easels, aprons, table covers - customer provides the space,
+   tables, and chairs, and may serve their own food/drinks).
+2. Quote the per-person price for their exact guest count from the table
+   below - use the "Corporate/Business" column if the inquiry reads as a
+   company/work event (mentions a company name, "team", "corporate",
+   "work", "coworkers", etc.), otherwise "Standard" (birthdays,
+   celebrations, personal events). State the location's minimum group
+   size (see that location's Private events section; 8 is the fallback
+   if the location file doesn't say otherwise).
+3. State the deposit policy (below).
+4. Offer a venue if they need one, using that location's venue link(s)
+   from its Private events section. If the location has no link on file,
+   say we'll send a list of partners once we confirm which artist is
+   available - don't invent a link.
+5. Mention other project options are available on request (glass
+   painting, tote bags, wood signs, pet portraits, etc.)
+6. Invite them to reply or schedule a call to lock in the date, and sign
+   off "Bonnie Davila, Private Event Coordinator, Painting & Vino" -
+   matching how the team's own macros are always signed regardless of who
+   actually sends them (every AI draft is held for human review before
+   sending anyway, so this matches what Bonnie would sign herself).
+
+**Pricing (per person, 3-hour event, standard 16x20 canvas):**
+
+| Guests | Standard (most cities) | Corporate/Business (most cities) |
+| --- | --- | --- |
+| 8-29  | $45/person | $50/person |
+| 30-49 | $40/person | $45/person |
+| 50+   | $35/person | $40/person |
+
+Kansas City runs its own lower tier:
+
+| Guests | Standard (Kansas City) | Corporate/Business (Kansas City) |
+| --- | --- | --- |
+| 8-29  | $39/person | $44/person |
+| 30-49 | $35/person | $40/person |
+| 50+   | $30/person | $35/person |
+
+A travel fee may apply for locations outside city limits - flag that
+possibility but don't quote an amount (a human confirms it).
+
+Kids' events (ages 6+, adults welcome too) are a separate, simpler rate:
+$35/person for most cities, $29/person in Kansas City, $40/person in San
+Francisco. A custom (non-portfolio) painting design costs an extra
+$50-75 on top of any of the above.
 
 **Minimum group size:** 8 people for most cities; **10 people** for
 Tucson, Sacramento, and San Francisco.
-
-**Pricing (per person, 3-hour event, standard 16x20 canvas), varies by
-city and whether it's a standard vs. corporate/business booking:**
-- Standard: roughly $39-50/person for 8-29 guests, with lower per-person
-  rates at 30-49 guests and 50+ guests (volume discount tiers).
-- Corporate/Business: roughly $44-55/person for 8-29 guests, similarly
-  discounted at higher headcounts.
-- Kansas City has its own (lower) tier: standard $39/30/25 and corporate
-  $44/40/35 depending on group size.
-- Kids' events (ages 6+, adults welcome too): $35/person for most cities,
-  $29/person in Kansas City, $40/person in San Francisco.
-- A custom (non-portfolio) painting design costs an extra $50-75.
-- Because exact pricing depends on city and group size/type, the AI
-  should NOT quote a specific number - point the customer to a private
-  events quote from our team (see event_booking_question rule) rather
-  than calculating one itself.
 
 **Deposit:** the greater of 2 seats' worth or 20% of the expected
 headcount. Non-refundable, but transferable to a future date for up to

@@ -144,15 +144,25 @@ rules:
     match:
       any_keywords: ["book an event", "book a class", "private event", "date availability", "how do i book"]
     action: pending
-    force_human_review: false
+    force_human_review: true
     add_tags: ["booking_question"]
     drafting_hint: >
-      Point them to the booking page for their city and ask which date/venue
-      they're interested in if not already stated, so we can confirm
-      availability. If a location was matched, include that location's
-      direct event calendar link (see the "Direct link" line in the
-      matched location's Booking section) rather than just saying "check
-      our website."
+      If this is a private/corporate event pricing inquiry (a "Private
+      Event Request"-style submission - guest count, event date, company
+      name, "team building"/"corporate"/"celebration" language), draft a
+      full quote reply following the shared knowledge base's Private
+      events section - quote the correct per-person price for their exact
+      guest count and event type, state the minimum and deposit, and
+      offer that location's venue link(s) if on file, signed off as
+      "Bonnie Davila, Private Event Coordinator, Painting & Vino" (see
+      that section for the full structure and reference example - ticket
+      #81048, a Tucson corporate team-building quote). For a general
+      public booking/date-availability question that ISN'T a private
+      event quote, just point them to the booking page for their city and
+      ask which date/venue they're interested in if not already stated.
+      If a location was matched, include that location's direct event
+      calendar link (see the "Direct link" line in the matched location's
+      Booking section) rather than just saying "check our website."
 
   - name: event_sign_up_question
     match:

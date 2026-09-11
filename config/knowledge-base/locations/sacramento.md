@@ -18,9 +18,12 @@ Cross Roads Pizza and Pub (Rocklin), Brick & Barrel Kitchen & Bar
 Texas BBQ (Roseville).
 
 ## Private events
-Available for birthdays, bachelorette parties, etc. - direct the customer
-to "request a quote." No fixed minimum group size found on the location
-page.
+Available for birthdays, bachelorette parties, etc. Minimum group size:
+**10 guests** (higher than the 8-person default; see shared.md's Private
+events section for the full pricing table and reply structure).
+
+Venue list (send when the customer needs a venue):
+https://drive.google.com/file/d/150NGoWBPzLopJ89S0SQKpOWkFEisYixb/view?usp=sharing
 
 ## What's included
 All art supplies and guided instruction. Food/drinks available for
