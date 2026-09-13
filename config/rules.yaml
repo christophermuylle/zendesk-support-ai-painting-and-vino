@@ -49,6 +49,15 @@
 # Matching runs against the ticket SUBJECT plus the latest customer message,
 # so a location that only shows up in the subject line (e.g. from a
 # location-specific contact form) is still caught.
+#
+# SCOPE (Christopher, 2026-09-13): only draft AI replies for Private Event
+# inquiries (event_booking_question) and ticket/order confirmations
+# (new_order_confirmation). Everything else below is set to no_action -
+# tagged and left Open for a human, no AI call, no reply of any kind - even
+# though several of these rules used to draft (see git history). This was
+# the original intent from day one; it had drifted as more rule categories
+# got added. Do not add solve/pending/escalate actions outside those two
+# categories without Christopher explicitly asking again.
 # ---------------------------------------------------------------------------
 
 rules:
@@ -93,52 +102,30 @@ rules:
   - name: refund_or_cancellation_request
     match:
       any_keywords: ["refund", "cancel my", "cancellation", "money back", "chargeback"]
-    action: escalate
-    force_human_review: true
+    action: no_action
+    force_human_review: false
     add_tags: ["needs_human", "refund_request"]
-    drafting_hint: >
-      Acknowledge the request and let them know a team member will follow up
-      shortly to process it. Do NOT promise a refund or cancellation yourself.
 
   - name: angry_or_upset_customer
     match:
       any_keywords: ["unacceptable", "furious", "scam", "lawsuit", "terrible experience", "worst"]
-    action: escalate
-    force_human_review: true
+    action: no_action
+    force_human_review: false
     add_tags: ["needs_human", "upset_customer"]
-    drafting_hint: >
-      Be warm and empathetic, apologize for the frustration, and say a team
-      member is personally looking into it. Do not try to resolve the
-      complaint yourself.
 
   - name: licensee_recruitment_inquiry
     match:
       any_keywords: ["become a licensee", "open a franchise", "start my own", "how do i become", "territory"]
-    action: pending
+    action: no_action
     force_human_review: false
     add_tags: ["licensee_lead"]
-    drafting_hint: >
-      Thank them for their interest and direct them to apply at
-      paintingandvino.com/application/ (more info at
-      paintingandvino.com/become-a-painting-and-vino-licensee/). Do NOT
-      state specific terms like revenue split, fees, or territorial
-      exclusivity - those aren't confirmed for this reply and should come
-      from a human ("a Painting & Vino associate will follow up with the
-      next steps" per our standard reply).
 
   - name: groupon_or_promo_code
     match:
       any_keywords: ["groupon", "livingsocial", "living social", "voucher", "bogo", "buy one get one", "promo code", "discount code"]
-    action: solve
+    action: no_action
     force_human_review: false
     add_tags: ["promo_code_question"]
-    drafting_hint: >
-      Answer from the Promo codes, Groupon & BOGO section of the
-      knowledge base. If the customer is reporting a code that won't
-      apply/isn't working (rather than asking how Groupons/BOGO work in
-      general), don't try to fix it yourself - ask for their name, the
-      code, and the class details, and note a human will follow up
-      (switch to pending in that case, not solve).
 
   - name: event_booking_question
     match:
@@ -151,15 +138,23 @@ rules:
       Event Request"-style submission - guest count, event date, company
       name, "team building"/"corporate"/"celebration" language), draft a
       full quote reply following the shared knowledge base's Private
-      events section - quote the correct per-person price for their exact
-      guest count and event type, state the minimum and deposit, and
-      offer that location's venue link(s) if on file, signed off as
-      "Bonnie Davila, Private Event Coordinator, Painting & Vino" (see
-      that section for the full structure and reference example - ticket
-      #81048, a Tucson corporate team-building quote). For a general
-      public booking/date-availability question that ISN'T a private
-      event quote, just point them to the booking page for their city and
-      ask which date/venue they're interested in if not already stated.
+      events section - this maps to one of two real Zendesk macros
+      ("Private Event Inquiry - Corporate/Business Quote" vs "...
+      Standard Quote"), picked using the form's Company Name field plus
+      message wording (see that section for the exact rule). Quote the
+      correct per-person price for their exact guest count and event
+      type, state the minimum and deposit, include the "see what a party
+      looks like" link, and offer that location's venue link(s) if on
+      file (or the fallback line if not), signed off as "Bonnie Davila,
+      Private Event Coordinator, Painting & Vino" (see that section for
+      the full structure and reference example - ticket #81048, a Tucson
+      corporate team-building quote). Tailor the wording to what the
+      customer actually said rather than sending something that reads as
+      copy-pasted. This always stays an internal draft for Bonnie to
+      review and send - never auto-sent. For a general public
+      booking/date-availability question that ISN'T a private event
+      quote, just point them to the booking page for their city and ask
+      which date/venue they're interested in if not already stated.
       If a location was matched, include that location's direct event
       calendar link (see the "Direct link" line in the matched location's
       Booking section) rather than just saying "check our website."
@@ -167,36 +162,19 @@ rules:
   - name: event_sign_up_question
     match:
       any_keywords: ["how do i sign up", "signing up", "sign up for", "how do i register", "register for", "how do i attend", "looking for an event"]
-    action: solve
+    action: no_action
     force_human_review: false
     add_tags: ["faq_auto_answered", "booking_question"]
-    drafting_hint: >
-      This is usually a fully-answerable question, not one that needs to
-      wait on the customer - if a location was matched, give them that
-      location's direct event calendar link (see the "Direct link" line
-      in the matched location's Booking section, and the shared knowledge
-      base's "Linking to the event calendar" section for the expected
-      phrasing/format) so they can browse and register themselves. Only
-      fall back to pending if no location could be matched and you need to
-      ask which city they mean.
 
   - name: general_faq
     match:
       any_keywords: ["what is", "how does", "do you offer", "hours", "location", "price", "cost", "policy"]
-    action: solve
+    action: no_action
     force_human_review: false
     add_tags: ["faq_auto_answered"]
-    drafting_hint: >
-      Answer directly and completely from the knowledge base. If the
-      knowledge base doesn't clearly cover it, do NOT guess - fall back to
-      pending and ask a clarifying question instead.
 
   - name: fallback_unclassified
     match: {}
-    action: pending
-    force_human_review: true
+    action: no_action
+    force_human_review: false
     add_tags: ["needs_human", "unclassified"]
-    drafting_hint: >
-      Draft a best-effort helpful reply, but this ticket type isn't covered
-      by a specific rule yet - flag it for a human to review and, if it's a
-      recurring pattern, ask Christopher to add a rule for it.
