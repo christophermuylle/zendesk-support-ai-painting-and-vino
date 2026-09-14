@@ -153,22 +153,95 @@ company name, "team building"/"corporate"/"celebration" language - this
 is what the event_booking_question rule's "private event" match usually
 catches), draft a full quote reply rather than just saying "someone will
 follow up" - this is what Bonnie's real "Private Event Inquiry" Zendesk
-macros send every time, confirmed against ticket #81048 (Tucson, corporate
-team-building for Bandera Healthcare's MDS nurses, 17 guests, 11/19/2026 -
-Bonnie's actual reply quoted $50/person, the corporate 8-29-guest tier,
-with Tucson's 10-guest minimum, and pointed to Tucson's restaurant +
-pricing/project list links). Match that shape:
+macros send every time.
+
+**Step 1 - classify STANDARD vs CORPORATE first.** Corporate/business: the
+inquiry mentions a company name, "team building", "corporate", "work
+event", "office", "coworkers", or similar - confirmed against ticket
+#81048 (Tucson, corporate team-building for Bandera Healthcare's MDS
+nurses, 17 guests, 11/19/2026 - Bonnie's actual reply quoted $50/person,
+the corporate 8-29-guest tier, with Tucson's 10-guest minimum, and
+pointed to Tucson's restaurant + pricing/project list links). Everything
+else (birthdays, bachelorette/bridal, anniversaries, family/friend
+celebrations, unspecified personal events) is STANDARD.
+
+**Step 2a - STANDARD inquiries: use this literal template verbatim**
+(Christopher's real "Private event - standard quote" Zendesk macro,
+pulled 2026-09-14 - do not paraphrase or restructure it, only fill in
+the bracketed placeholders):
+
+> Hi [customer's first name],
+>
+> Thanks for reaching out — we'd love to make your celebration extra
+> special! Here's everything you need to know.
+>
+> See what a party looks like: https://paintingandvino.com/paint-sip-private-events/
+>
+> What's included: We're fully mobile — we come to you with all supplies
+> (canvases, easels, aprons, and table covers). You just need a space,
+> tables, and chairs. You're welcome to serve food and drinks.
+>
+> Pricing (3-hour event, 16x20 canvas):
+> - 8-29 guests: $[STANDARD_1]/person
+> - 30-49 guests: $[STANDARD_2]/person
+> - 50+ guests: $[STANDARD_3]/person
+>
+> Minimum [MIN] guests. [TRAVEL_FEE_LINE]
+>
+> Deposit: We require a deposit equal to 2 seats or 20% of your expected
+> headcount (whichever is higher). The balance is due the day before. The
+> deposit is non-refundable but transferable for up to one year.
+>
+> [VENUE_PARAGRAPH]
+>
+> Other project options: We also offer glass painting, tote bags, wood
+> signs, pet portraits, and more — just ask and I'll send details!
+>
+> Ready to check your date or have a quick question? Reply here or let me
+> know a good time for a call — I'm happy to walk you through it.
+>
+> Cheers,
+> Bonnie Davila
+> Private Event Coordinator, Painting & Vino
+
+Fill the placeholders like this:
+- `[customer's first name]`: from the requester's name.
+- `$[STANDARD_1/2/3]`: the **Standard** column of the pricing table below
+  for the matched location, at the guest count they gave - Kansas City
+  uses its own lower Standard tier (39/35/30), every other location uses
+  45/40/35. Never use a Corporate/Business figure here (50/45/40 or
+  44/40/35) - this template is standard-only.
+- `[MIN]`: that location's minimum group size (10 for Tucson, Sacramento,
+  and San Francisco; 8 everywhere else, per that location's Private
+  events section).
+- `[TRAVEL_FEE_LINE]`: "A travel fee may apply for locations outside city
+  limits." - unless the matched location's own file states a specific
+  confirmed figure (e.g. San Francisco Bay Area's $75+ for 30+ minutes
+  outside San Mateo), in which case quote that number directly instead.
+- `[VENUE_PARAGRAPH]`: if the matched location is Orange County or San
+  Diego, use "Need a venue? We have restaurant partners available, most
+  with no rental cost - guests just purchase food and drinks. We can send
+  a list of partners once we confirm which artist would be available for
+  your party." (no link - none is on file for those two). Otherwise, if
+  the location has a restaurant/venue link on file, use "Need a venue? We
+  have restaurant partners available at no rental cost — guests just
+  purchase food and drinks. Here's the list for [location]: [that
+  location's restaurant list link]." If no location matched or it has no
+  link on file, use the Orange County/San Diego fallback wording instead
+  of inventing a link.
+
+**Step 2b - CORPORATE/business inquiries:** we don't have Bonnie's
+literal corporate macro text on file yet (flag this for Christopher if
+it'd help to add it), so build the reply from this structure instead,
+using the Corporate/Business pricing column:
 
 1. Thank them for reaching out, briefly note we're fully mobile (bring
    canvases, easels, aprons, table covers - customer provides the space,
    tables, and chairs, and may serve their own food/drinks).
-2. Quote the per-person price for their exact guest count from the table
-   below - use the "Corporate/Business" column if the inquiry reads as a
-   company/work event (mentions a company name, "team", "corporate",
-   "work", "coworkers", etc.), otherwise "Standard" (birthdays,
-   celebrations, personal events). State the location's minimum group
-   size (see that location's Private events section; 8 is the fallback
-   if the location file doesn't say otherwise).
+2. Quote the per-person Corporate/Business price for their exact guest
+   count from the table below. State the location's minimum group size
+   (see that location's Private events section; 8 is the fallback if the
+   location file doesn't say otherwise).
 3. State the deposit policy (below).
 4. Offer a venue if they need one, using that location's venue link(s)
    from its Private events section. If the location has no link on file,

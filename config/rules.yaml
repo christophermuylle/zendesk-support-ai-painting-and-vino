@@ -150,23 +150,28 @@ rules:
       events section - this maps to one of two real Zendesk macros
       ("Private Event Inquiry - Corporate/Business Quote" vs "...
       Standard Quote"), picked using the form's Company Name field plus
-      message wording (see that section for the exact rule). Quote the
-      correct per-person price for their exact guest count and event
-      type, state the minimum and deposit, include the "see what a party
-      looks like" link, and offer that location's venue link(s) if on
-      file (or the fallback line if not), signed off as "Bonnie Davila,
-      Private Event Coordinator, Painting & Vino" (see that section for
-      the full structure and reference example - ticket #81048, a Tucson
-      corporate team-building quote). Tailor the wording to what the
-      customer actually said rather than sending something that reads as
-      copy-pasted. This always stays an internal draft for Bonnie to
-      review and send - never auto-sent. For a general public
-      booking/date-availability question that ISN'T a private event
-      quote, just point them to the booking page for their city and ask
-      which date/venue they're interested in if not already stated.
-      If a location was matched, include that location's direct event
-      calendar link (see the "Direct link" line in the matched location's
-      Booking section) rather than just saying "check our website."
+      message wording (see that section for the exact classification
+      rule). For a STANDARD (non-corporate) inquiry, use the shared
+      knowledge base's literal "Standard quote template" VERBATIM,
+      filling in only the bracketed placeholders - do not paraphrase or
+      restructure it. For a CORPORATE/business inquiry, build the reply
+      from the shared knowledge base's corporate quote structure and
+      pricing column instead (we don't have Bonnie's literal corporate
+      macro text on file yet; ticket #81048, a Tucson corporate
+      team-building quote, is the reference shape). Quote the correct
+      per-person price for their exact guest count and event type, state
+      the minimum and deposit, include the "see what a party looks like"
+      link, and offer that location's venue link(s) if on file (or the
+      fallback line if not), signed off as "Bonnie Davila, Private Event
+      Coordinator, Painting & Vino". This always stays an internal draft
+      for Bonnie to review and send - never auto-sent. For a general
+      public booking/date-availability question that ISN'T a private
+      event quote, just point them to the booking page for their city
+      and ask which date/venue they're interested in if not already
+      stated. If a location was matched, include that location's direct
+      event calendar link (see the "Direct link" line in the matched
+      location's Booking section) rather than just saying "check our
+      website."
 
   - name: event_sign_up_question
     match:
