@@ -33,6 +33,7 @@ export interface PipelineResult {
     | "order_confirmation_solved"
     | "order_confirmation_left_open"
     | "licensee_initial_response_sent"
+    | "licensee_initial_response_already_sent"
     | "no_op";
   mode: Mode;
 }
@@ -64,7 +65,13 @@ function buildKnowledgeBase(deps: PipelineDeps, ctx: TicketContext): { text: str
     // back to shared-only rather than erroring the whole ticket.
     return { text: deps.sharedKnowledgeBase, locationDisplayName: match.displayName };
   }
-  const text = `${deps.sharedKnowledgeBase}\n\n---\n\n# Matched location: ${match.displayName}\n\n${snippet}`;
+  const text = `${deps.sharedKnowledgeBase}
+
+---
+
+# Matched location: ${match.displayName}
+
+${snippet}`;
   return { text, locationDisplayName: match.displayName };
 }
 
@@ -131,6 +138,31 @@ export async function processTicket(deps: PipelineDeps, ticketId: number): Promi
   // order_confirmation - this bypasses the usual MODE=draft human-review
   // hold because it's a fixed template, not an AI judgment call.
   if (ruleDecision.action === "licensee_initial_response") {
+    // IDEMPOTENCY GUARD (added 2026-09-14 after ticket #81117): Zendesk's
+    // "Support AI" trigger fires on ANY ticket update matching "Ticket
+    // Created" OR "Comment is Public" - with no restriction on the
+    // comment's author. The public reply posted just below satisfies that
+    // second condition itself, so it was re-triggering this same webhook,
+    // which re-evaluated this same rule (nothing about the match text
+    // changes) and posted ANOTHER public reply - a tight loop, confirmed as
+    // ~30 duplicate "please respond RECEIVED" emails to one real licensee
+    // applicant in under 3 minutes before it stopped. Christopher is
+    // tightening the Zendesk trigger condition itself (should stop the
+    // re-trigger at the source), but this guard is a required backstop
+    // regardless - it makes this branch safe to re-run no matter how many
+    // times the webhook fires for the same ticket. Once handled, Zendesk's
+    // tagger field auto-applies LICENSEE_INITIAL_RESPONSE_FIELD_VALUE
+    // ("artist__licensee_or_venue") to the ticket - its presence means "the
+    // fixed reply already went out," so skip rather than send it again.
+    if (ctx.ticket.tags.includes(LICENSEE_INITIAL_RESPONSE_FIELD_VALUE)) {
+      return {
+        ticketId,
+        ruleDecision,
+        matchedLocation: null,
+        finalAction: "licensee_initial_response_already_sent",
+        mode: deps.mode,
+      };
+    }
     await deps.zendesk.postComment(ticketId, LICENSEE_INITIAL_RESPONSE_TEXT, {
       isPublic: true,
       status: "solve",
@@ -183,5 +215,6 @@ function formatInternalNote(rule: RuleDecision, draft: DraftResult): string {
     draft.replyBody,
     ``,
     `Reasoning: ${draft.reasoning}`,
-  ].join("\n");
+  ].join("
+");
 }
