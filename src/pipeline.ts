@@ -65,13 +65,9 @@ function buildKnowledgeBase(deps: PipelineDeps, ctx: TicketContext): { text: str
     // back to shared-only rather than erroring the whole ticket.
     return { text: deps.sharedKnowledgeBase, locationDisplayName: match.displayName };
   }
-  const text = `${deps.sharedKnowledgeBase}
-
----
-
-# Matched location: ${match.displayName}
-
-${snippet}`;
+  const text = [deps.sharedKnowledgeBase, "---", `# Matched location: ${match.displayName}`, snippet].join(
+    String.fromCharCode(10, 10)
+  );
   return { text, locationDisplayName: match.displayName };
 }
 
@@ -215,6 +211,5 @@ function formatInternalNote(rule: RuleDecision, draft: DraftResult): string {
     draft.replyBody,
     ``,
     `Reasoning: ${draft.reasoning}`,
-  ].join("
-");
+  ].join(String.fromCharCode(10));
 }

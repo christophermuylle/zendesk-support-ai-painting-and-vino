@@ -40,15 +40,12 @@ class MockZendeskClient implements IZendeskClient {
     body: string,
     opts: { isPublic: boolean; status?: ActionType; addTags?: string[]; fields?: Array<{ id: number; value: string | null }> }
   ): Promise<void> {
-    console.log(`
-  -> would post comment (public=${opts.isPublic}, status=${opts.status ?? "unchanged"}, tags=${opts.addTags?.join(",") ?? "-"}, fields=${JSON.stringify(opts.fields ?? [])}):`);
-    console.log(`     "${body.replace(/
-/g, "
-     ")}"`);
+    const nl = String.fromCharCode(10);
+    console.log(nl + `  -> would post comment (public=${opts.isPublic}, status=${opts.status ?? "unchanged"}, tags=${opts.addTags?.join(",") ?? "-"}, fields=${JSON.stringify(opts.fields ?? [])}):`);
+    console.log(`     "${body.split(nl).join(nl + "     ")}"`);
   }
   async updateTicket(ticketId: number, opts: { status?: string; addTags?: string[]; fields?: Array<{ id: number; value: string | null }> }): Promise<void> {
-    console.log(`
-  -> would set status=${opts.status ?? "unchanged"}, tags+=${opts.addTags?.join(",") ?? "-"}, fields=${JSON.stringify(opts.fields ?? [])}, no reply (out of scope)`);
+    console.log(String.fromCharCode(10) + `  -> would set status=${opts.status ?? "unchanged"}, tags+=${opts.addTags?.join(",") ?? "-"}, fields=${JSON.stringify(opts.fields ?? [])}, no reply (out of scope)`);
   }
 }
 
@@ -192,12 +189,12 @@ const scenarios: { label: string; ctx: TicketContext }[] = [
       ticket: {
         id: 8,
         subject: "New submission from Licensee Application",
-        description: "Name
+        description: `Name
 Jordan Applicant
 Email
 jordan@example.com
 How did you hear about this opportunity?
-Google",
+Google`,
         status: "new",
         requester_id: CUSTOMER_ID,
         tags: [],
@@ -207,12 +204,12 @@ Google",
       requester: { id: CUSTOMER_ID, name: "Jordan Applicant", email: "jordan@example.com" },
       comments: [
         makeComment(
-          "Name
+          `Name
 Jordan Applicant
 Email
 jordan@example.com
 How did you hear about this opportunity?
-Google",
+Google`,
           CUSTOMER_ID
         ),
       ],
@@ -225,12 +222,12 @@ Google",
       ticket: {
         id: 9,
         subject: "New submission from Licensee Application",
-        description: "Name
+        description: `Name
 Jordan Applicant
 Email
 jordan@example.com
 How did you hear about this opportunity?
-Google",
+Google`,
         status: "solved",
         requester_id: CUSTOMER_ID,
         // Already tagged from the first run - simulates the Zendesk "Support
@@ -243,12 +240,12 @@ Google",
       requester: { id: CUSTOMER_ID, name: "Jordan Applicant", email: "jordan@example.com" },
       comments: [
         makeComment(
-          "Name
+          `Name
 Jordan Applicant
 Email
 jordan@example.com
 How did you hear about this opportunity?
-Google",
+Google`,
           CUSTOMER_ID
         ),
       ],
@@ -281,13 +278,11 @@ async function main() {
     ? new AiDrafter({ apiKey: process.env.ANTHROPIC_API_KEY!, model: process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-5" })
     : new MockAiDrafter();
 
-  console.log(`Running ${scenarios.length} mock tickets through the pipeline (AI: ${useRealAi ? "real Claude API" : "mock, offline"})
-`);
+  console.log(`Running ${scenarios.length} mock tickets through the pipeline (AI: ${useRealAi ? "real Claude API" : "mock, offline"})` + String.fromCharCode(10));
   console.log("Loaded rules:", (yaml.load(fs.readFileSync(path.join(CONFIG_DIR, "rules.yaml"), "utf-8")) as { rules: { name: string }[] }).rules.map((r) => r.name).join(", "));
 
   for (const scenario of scenarios) {
-    console.log(`
-=== ${scenario.label} ===`);
+    console.log(String.fromCharCode(10) + `=== ${scenario.label} ===`);
     const zendesk = new MockZendeskClient(scenario.ctx);
     const result = await processTicket(
       { zendesk, rules, locations, ai, sharedKnowledgeBase, loadLocationSnippet, mode: "draft" },
