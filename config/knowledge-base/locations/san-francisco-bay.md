@@ -23,8 +23,28 @@ Available for birthdays, bachelorette parties, etc. Minimum group size:
 **10 guests** (higher than the 8-person default; see shared.md's Private
 events section for the full pricing table and reply structure).
 
-Venue list (send when the customer needs a venue):
-https://drive.google.com/file/d/1hw8ah1CYraxxCEsVWSLwuuGoUb5pyKIU/view?usp=sharing
+Travel fee: **$75+ for events 30+ minutes outside San Mateo** (per
+Christopher, 2026-09-14, from the location's pricing flyer) - quote this
+figure directly for San Francisco rather than the generic "a fee may
+apply, don't quote an amount" instruction in shared.md; that instruction
+is for locations without a confirmed number.
+
+Project menu (offer only if the customer wants something other than the
+default 16x20 canvas - otherwise just quote shared.md's per-person
+Standard/Corporate guest-count price as normal):
+- 11x14 canvas: $48/person
+- 16x20 canvas: $50/person
+- Tote bags: $55/person
+- Painting on glassware: $45/person
+- Mixed media: $55/person (+$10 for a 3-D effect)
+- Pet portraits: $60/person
+- "For You" fundraiser (open to the public, 20% of ticket sales donated): $5+/ticket
+(Source: "Private Event Venue and Pricing Kit - PRICING.png", shared by
+Christopher 2026-09-14.)
+
+Venue lists (send when the customer needs a venue):
+- Restaurant list: https://drive.google.com/file/d/1hw8ah1CYraxxCEsVWSLwuuGoUb5pyKIU/view?usp=sharing
+- Pricing/project list: https://drive.google.com/file/d/1Rj8d2kXWVEoUf94Jbww9hsEdGFpYMXTd/view?usp=sharing
 
 ## What's included
 Canvas, paints, brushes, and an apron. Food/drinks available for purchase

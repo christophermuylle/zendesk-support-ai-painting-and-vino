@@ -24,8 +24,35 @@ Available for birthdays, bachelorette parties, bridal showers, and
 corporate team-building. Minimum group size: 8 guests (see shared.md's
 Private events section for the full pricing table and reply structure).
 
-Venue list (send when the customer needs a venue):
-https://drive.google.com/file/d/1VzVqrKgYp0RuGr-hEm3fsFRCt4JNK0Zr/view?usp=sharing
+Project menu (offer only if the customer wants something other than the
+default project - otherwise just quote shared.md's per-person
+Standard/Corporate guest-count price as normal).
+
+Standard/general events (birthdays, bachelorette, community):
+- Canvas painting (11x14 or 16x20): $45/person
+- Paint your pet: $55/person
+- Flower pots: $50/person
+- Glass painting: $50/person
+(Source: "Private Events - Standard Pricing -2026.pdf", shared by
+Christopher 2026-09-14.)
+
+Corporate events:
+- Canvas painting (11x14 or 16x20): $50/person
+- Paint your pet: $60/person
+- Flower pots: $55/person
+- Glass painting: $55/person
+(Source: "Private Events - Corporate Pricing -2026.pdf", shared by
+Christopher 2026-09-14.)
+
+Note: both source sheets are also labeled for Orange County, but
+Christopher already confirmed Orange County's existing reply is correct,
+so this project menu hasn't been added there without explicit
+instruction.
+
+Venue lists (send when the customer needs a venue):
+- Venue list: https://drive.google.com/file/d/1VzVqrKgYp0RuGr-hEm3fsFRCt4JNK0Zr/view?usp=sharing
+- Standard pricing/project list: https://drive.google.com/file/d/1Lwy3N5Y1-PsIgwJcWMyataoZrZUcpqM2/view?usp=sharing
+- Corporate pricing/project list: https://drive.google.com/file/d/1HFdJf55BMZsNHRH0OlK6TrXiyzRrYenk/view?usp=sharing
 
 ## What's included
 Canvas, paints, brushes, and an easel-side apron. Food/drinks available

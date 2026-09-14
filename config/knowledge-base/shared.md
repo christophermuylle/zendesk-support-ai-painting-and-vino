@@ -199,7 +199,10 @@ Kansas City runs its own lower tier:
 | 50+   | $30/person | $35/person |
 
 A travel fee may apply for locations outside city limits - flag that
-possibility but don't quote an amount (a human confirms it).
+possibility but don't quote an amount (a human confirms it), UNLESS that
+location's own file states a specific figure (e.g. San Francisco Bay Area
+has a confirmed $75+ for 30+ minutes outside San Mateo) - quote that
+number directly instead of hedging.
 
 Kids' events (ages 6+, adults welcome too) are a separate, simpler rate:
 $35/person for most cities, $29/person in Kansas City, $40/person in San

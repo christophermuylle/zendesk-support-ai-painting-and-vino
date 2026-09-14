@@ -20,11 +20,34 @@ City).
 ## Private events
 Good for birthdays, bachelorette parties, bridal showers, and corporate
 team-building. Minimum group size: 8 guests. Kansas City runs its own
-lower pricing tier (see shared.md's Private events section for the full
-table and reply structure).
+lower per-person guest-count pricing tier (see shared.md's Private
+events section for the full table and reply structure).
 
-Venue list (send when the customer needs a venue):
-https://drive.google.com/file/d/18KzW9OAIjSl9xBfU9HNxa94BkYVfcAbU/view?usp=sharing
+Project menu (offer only if the customer wants something other than the
+default project - otherwise just quote shared.md's per-person
+Standard/Corporate guest-count price as normal). A 2-seat deposit is
+required to reserve the date/time; discounts available for 31+ people.
+
+Standard/general events (birthdays, bachelorette parties, community):
+- 11x14 canvas: $34/ticket
+- 16x20 canvas: $39/ticket
+- Canvas tote bag: $40/ticket
+- Glassware: $39/ticket
+- Pet portrait: $49/ticket
+
+Corporate events:
+- 11x14 canvas: $39/ticket
+- 16x20 canvas: $44/ticket
+- Canvas tote bag: $40/ticket
+- Glassware: $44/ticket
+- Pet portrait: $50/ticket
+(Source: "General Pricing BdayBachCommunity.pdf" and "Corporate
+Pricing.pdf", shared by Christopher 2026-09-14.)
+
+Venue lists (send when the customer needs a venue):
+- Venue list: https://drive.google.com/file/d/18KzW9OAIjSl9xBfU9HNxa94BkYVfcAbU/view?usp=sharing
+- Standard pricing/project list: https://drive.google.com/file/d/1Xvdx_ZS5YojsOngWyUSN-zTMSS77WSMz/view?usp=sharing
+- Corporate pricing/project list: https://drive.google.com/file/d/17C-aBlnRlIqAKLV_dXnn6DR2gzGvb2kj/view?usp=sharing
 
 ## What's included
 All art supplies and guided instruction. Food/drinks available for
