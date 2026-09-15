@@ -138,7 +138,18 @@ rules:
       # keywords. Applied here too in case Painting and Vino's contact form
       # uses the same format - confirm against a real ticket and adjust if
       # the wording differs.
-      any_keywords: ["book an event", "book a class", "private event", "date availability", "how do i book", "party request", "guests:", "preferred date", "fundraiser", "fundraising", "kid's birthday", "children's birthday", "kids party", "painting & kiddos"]
+      # "team building", "corporate event", "party of", "birthday party"
+      # added 2026-09-15 after Christopher's own test ticket ("I'd like to
+      # book a corporate team building event in Tucson for a party of 10
+      # people") fell through to fallback_unclassified - "book a[n] ...
+      # event" phrasing with a qualifier in the middle doesn't match "book
+      # an event", and "party of 10" doesn't match "party request", so a
+      # very ordinary corporate/team-building or birthday inquiry could
+      # silently miss the AI draft entirely and just sit tagged
+      # needs_human/unclassified instead of booking_question. This is
+      # plain substring matching (see src/rules.ts) - no wildcards - so
+      # each real-world phrasing needs its own literal keyword.
+      any_keywords: ["book an event", "book a class", "private event", "date availability", "how do i book", "party request", "guests:", "preferred date", "fundraiser", "fundraising", "kid's birthday", "children's birthday", "kids party", "painting & kiddos", "team building", "corporate event", "party of", "birthday party"]
     action: pending
     force_human_review: true
     add_tags: ["booking_question"]
