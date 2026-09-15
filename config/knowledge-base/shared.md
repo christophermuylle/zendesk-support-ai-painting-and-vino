@@ -137,9 +137,11 @@ policy, so don't promise it will work everywhere.
 
 <!-- FLAGGED: the old paint-and-sip-faq page said a 15-person minimum;
      the team's actual macros (used daily to quote real customers) say
-     8 people minimum for most cities, 10 for Tucson/Sacramento/San
-     Francisco. This file now follows the macros. Please confirm 15 was
-     outdated FAQ copy and not the other way around. -->
+     8 people minimum for most cities, 10 for Tucson/Sacramento. This
+     file now follows the macros. Please confirm 15 was outdated FAQ
+     copy and not the other way around. San Francisco moved from a
+     10-person to the standard 8-person minimum per Jessica,
+     2026-09-15 (see that location's Private events section). -->
 
 We're 100% mobile (no studio) - we bring supplies to the customer's home,
 office, or a venue of their choice; we don't provide food, beverages,
@@ -211,9 +213,9 @@ Fill the placeholders like this:
   uses its own lower Standard tier (39/35/30), every other location uses
   45/40/35. Never use a Corporate/Business figure here (50/45/40 or
   44/40/35) - this template is standard-only.
-- `[MIN]`: that location's minimum group size (10 for Tucson, Sacramento,
-  and San Francisco; 8 everywhere else, per that location's Private
-  events section).
+- `[MIN]`: that location's minimum group size (10 for Tucson and
+  Sacramento; 8 everywhere else, including San Francisco, per that
+  location's Private events section).
 - `[TRAVEL_FEE_LINE]`: "A travel fee may apply for locations outside city
   limits." - unless the matched location's own file states a specific
   confirmed figure (e.g. San Francisco Bay Area's $75+ for 30+ minutes
@@ -283,7 +285,8 @@ Francisco. A custom (non-portfolio) painting design costs an extra
 $50-75 on top of any of the above.
 
 **Minimum group size:** 8 people for most cities; **10 people** for
-Tucson, Sacramento, and San Francisco.
+Tucson and Sacramento. San Francisco moved to the standard 8-person
+minimum on 2026-09-15 (per Jessica).
 
 **Deposit:** the greater of 2 seats' worth or 20% of the expected
 headcount. Non-refundable, but transferable to a future date for up to

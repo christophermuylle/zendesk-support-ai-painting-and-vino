@@ -20,18 +20,27 @@ Carlos).
 
 ## Private events
 Available for birthdays, bachelorette parties, etc. Minimum group size:
-**10 guests** (higher than the 8-person default; see shared.md's Private
-events section for the full pricing table and reply structure).
+**8 guests** (the standard default - lowered from 10 on 2026-09-15 per
+Jessica; see shared.md's Private events section for the full pricing
+table and reply structure).
 
 Travel fee: **$75+ for events 30+ minutes outside San Mateo** (per
-Christopher, 2026-09-14, from the location's pricing flyer) - quote this
-figure directly for San Francisco rather than the generic "a fee may
-apply, don't quote an amount" instruction in shared.md; that instruction
-is for locations without a confirmed number.
+Christopher, 2026-09-14, from the location's pricing flyer, reconfirmed
+on the updated 2026-09-15 flyer) - quote this figure directly for San
+Francisco rather than the generic "a fee may apply, don't quote an
+amount" instruction in shared.md; that instruction is for locations
+without a confirmed number.
 
 Project menu (offer only if the customer wants something other than the
 default 16x20 canvas - otherwise just quote shared.md's per-person
-Standard/Corporate guest-count price as normal):
+Standard/Corporate guest-count price as normal). Use the Standard list for
+birthdays/bachelorette/other personal celebrations, the Corporate list for
+company/team-building inquiries - same Standard vs Corporate classification
+shared.md's Step 1 uses for the main guest-count table (Corporate runs a
+flat +$5/person over Standard on every project, matching that table's own
++$5 corporate markup):
+
+Standard:
 - 11x14 canvas: $48/person
 - 16x20 canvas: $50/person
 - Tote bags: $55/person
@@ -41,6 +50,19 @@ Standard/Corporate guest-count price as normal):
 - "For You" fundraiser (open to the public, 20% of ticket sales donated): $5+/ticket
 (Source: "Private Event Venue and Pricing Kit - PRICING.png", shared by
 Christopher 2026-09-14.)
+
+Corporate:
+- 11x14 canvas: $53/person
+- 16x20 canvas: $55/person
+- Tote bags: $60/person
+- Painting on glassware: $50/person
+- Mixed media: $60/person (+$10 for a 3-D effect)
+- Pet portraits: $65/person
+- "For You" fundraiser (open to the public, 20% of ticket sales donated): $10+/ticket
+(Source: "SF Corporate Pricing.jpg", shared by Jessica 2026-09-15. Also
+confirms the 8-person minimum above, a 2-person deposit - consistent with
+shared.md's general deposit policy - and the $75+ travel fee; these three
+apply location-wide, not just to corporate quotes.)
 
 Venue lists (send when the customer needs a venue):
 - Restaurant list: https://drive.google.com/file/d/1hw8ah1CYraxxCEsVWSLwuuGoUb5pyKIU/view?usp=sharing
