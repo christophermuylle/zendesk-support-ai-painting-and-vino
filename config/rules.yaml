@@ -149,7 +149,16 @@ rules:
       # needs_human/unclassified instead of booking_question. This is
       # plain substring matching (see src/rules.ts) - no wildcards - so
       # each real-world phrasing needs its own literal keyword.
-      any_keywords: ["book an event", "book a class", "private event", "date availability", "how do i book", "party request", "guests:", "preferred date", "fundraiser", "fundraising", "kid's birthday", "children's birthday", "kids party", "painting & kiddos", "team building", "corporate event", "party of", "birthday party"]
+      # "private party" added 2026-09-15 after another of Christopher's
+      # test tickets ("I have a group of 6 people for a private party in
+      # Los Angeles") also fell through to fallback_unclassified - "private
+      # party" doesn't match "private event", and "group of 6 people"
+      # doesn't match "party of" either. Since location resolution only
+      # runs once a rule actually needs the knowledge base (see
+      # pipeline.ts), missing this keyword also meant Los Angeles never
+      # got matched as a location, even though it was right there in the
+      # subject line.
+      any_keywords: ["book an event", "book a class", "private event", "private party", "date availability", "how do i book", "party request", "guests:", "preferred date", "fundraiser", "fundraising", "kid's birthday", "children's birthday", "kids party", "painting & kiddos", "team building", "corporate event", "party of", "birthday party"]
     action: pending
     force_human_review: true
     add_tags: ["booking_question"]
