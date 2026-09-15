@@ -161,67 +161,60 @@ macros send every time.
 inquiry is about hosting a fundraiser/charity/benefit painting party
 (mentions "fundraiser", "fundraising", "charity", "benefit", "nonprofit",
 "donate"/"donation", or "cause"), use this literal template verbatim
-(Christopher's real fundraiser quote, 2026-09-15 - do not paraphrase or
-restructure it, only fill in the bracketed placeholders). Skip Steps 1-2
-below for these - fundraisers are their own category, not Standard or
-Corporate:
+(Christopher and Bonnie's fundraiser quote, revised 2026-09-15 for
+clarity - do not paraphrase or restructure it, only fill in the
+bracketed placeholders). Skip Steps 1-2 below for these - fundraisers
+are their own category, not Standard or Corporate:
 
-> Hi [customer's first name]
+> Hi [customer's first name],
 >
 > Thank you so much for your interest in having Painting & Vino host your
-> Private Event! Adding a painting activity is great for any occasion.
-> Our private events are exclusive paint parties just for your group!
-> You pick the date/time/location and art project. It's all about the
-> experience and spending time with your co-workers, friends, and loved
-> ones.
+> fundraiser! Adding a painting activity is a great way to bring your
+> cause to life — our private events are exclusive paint parties just for
+> your group, and it's all about the experience of raising money while
+> spending time with your co-workers, friends, and loved ones.
 >
-> To book a Private Event with Painting & Vino:
+> See what a party looks like: https://paintingandvino.com/paint-sip-private-events/
 >
-> LOCATION:
-> All events are done on location which means we come to your home,
-> office, or venue of choice. Please note, we do not provide
-> food/beverages or tables/chairs.
+> **Location:** All events are done on location — we come to your home,
+> office, or venue of choice. We don't provide food, beverages, tables,
+> or chairs. If you don't have a place for your party, we work with a
+> variety of restaurants in your area — let us know and we'll send a
+> list, then check availability. (Food/drinks aren't included in our
+> pricing, and the venue will expect guests to purchase something for use
+> of the space.)
 >
-> If you don't have a place for your party, we work with a variety of
-> restaurants in your area. Let us know and we'll send a list then check
-> availability. Note - food/drinks aren't included in our pricing and
-> they will expect everyone to order for use of the space.
+> **Date/Time:** Parties are booked in 3-hour windows with about 2.5
+> hours of paint time. We're flexible with dates, but we'll need to
+> confirm availability for an instructor (and a venue, if needed).
 >
-> DATE/TIME:
-> Parties are booked in 3-hour windows with approx. 2.5 hours of paint
-> time. We are flexible with dates but will have to ensure one of our
-> instructors and venues if needed, has availability.
+> **Project:** Choose one for your group:
+> - Step-by-step canvas — pick from over 2,000 images in our library,
+>   sent once the event is booked (or we can create a custom design for
+>   $75)
+> - Glass painting — each guest paints a pair of wine or beer glasses,
+>   led step by step by the instructor (guests can also paint their own
+>   design with guidance)
+> - Pet Art — send us pet photos ahead of time and we'll show your guests
+>   how to paint their own pet portrait
 >
-> PROJECT:
-> Step-by-step canvas - choose from over 2000 images in our library which
-> we will send once the event is booked or we can create a custom image
-> for $50.
+> **Pricing:** We discount our standard rate by $5 per person and donate
+> that difference to your cause. You're also welcome to charge guests
+> more than our rate — any amount above what we're paid goes straight to
+> your cause as extra donation. A donation receipt with our EIN is
+> required if you're selling tickets, for tax purposes.
 >
-> Glass painting - Each guest paints a pair of wine or beer glasses. The
-> instructor leads the group in one design step by step. Your guests can
-> also paint their own designs with the instructor's guidance.
->
-> Pet Art - Great for pet lovers! You send us pet photos prior to the
-> event and we show you how to create your own pet portrait. Everyone
-> will paint their own pet image.
->
-> PRICING:
-> We discount our rate by $5 per person and donate the difference to your
-> cause. You can decide the ticket price to increase the donation above
-> the rates below. We do require a donation receipt with EIN for tax
-> purposes if we sell tickets. There is a 12 person minimum to host a
-> fundraiser. If that number isn't met, we will cancel the event 48 hours
-> before and refund tickets sold.
->
-> Standard Rate: (We discount below by $5 and you can also increase if
-> you like)
 > [FUNDRAISER_CITY_GROUP]
 >
-> We hope all this gives you the info you need, but please feel free to
-> let me know if you have other questions. I'm happy to work with you as
-> best as I can if you have a certain budget so let's keep the
-> conversation going.
-> We look forward to hearing back from you.
+> There's a 12-person minimum to host a fundraiser. If that number isn't
+> met, we'll cancel the event 48 hours beforehand and refund any tickets
+> sold.
+>
+> This gives you everything you need to get started, but I'm happy to
+> answer any other questions — including working with you on a specific
+> budget, so let's keep the conversation going. Reply with your preferred
+> date, guest count, and city, and I'll get a firmed-up quote over to
+> you.
 >
 > Thank you,
 > Bonnie Davila
@@ -230,16 +223,25 @@ Corporate:
 
 Fill the placeholders like this:
 - `[customer's first name]`: from the requester's name.
-- `[FUNDRAISER_CITY_GROUP]`: pick the line matching the matched location
-  (all figures are the pre-discount "Standard Rate" - the customer's
-  actual price is $5/person less, per the paragraph above):
-  - San Diego, Orange County, Los Angeles, Sacramento, or Tucson: "SD,
-    OC, LA, SAC, TUC: $45pp step-by-step canvas or glass/$55pp Pet
-    Portraits"
-  - Kansas City, MO: "Kansas City, MO: $39pp step-by-step canvas or
-    glass/$49pp Pet Portraits"
-  - San Francisco Bay Area: "SF: $50pp step-by-step canvas or glass/$60pp
-    Pet Portraits"
+- `[FUNDRAISER_CITY_GROUP]`: pick the paragraph matching the matched
+  location - each one states that group's base rate, the discounted
+  fundraiser rate (base minus $5/person), and a worked example so the AI
+  never has to compute the math itself:
+  - San Diego, Orange County, Los Angeles, Sacramento, or Tucson: "Our
+    rate: $45pp for step-by-step canvas or glass painting, $55pp for Pet
+    Portraits. After our $5/person fundraiser discount, you're charged
+    $40pp / $50pp — so if you sell tickets at $45pp, $5 per ticket goes
+    to your cause (charge more to raise more)."
+  - Kansas City, MO: "Our rate: $39pp for step-by-step canvas or glass
+    painting, $49pp for Pet Portraits. After our $5/person fundraiser
+    discount, you're charged $34pp / $44pp — so if you sell tickets at
+    $39pp, $5 per ticket goes to your cause (charge more to raise
+    more)."
+  - San Francisco Bay Area: "Our rate: $50pp for step-by-step canvas or
+    glass painting, $60pp for Pet Portraits. After our $5/person
+    fundraiser discount, you're charged $45pp / $55pp — so if you sell
+    tickets at $50pp, $5 per ticket goes to your cause (charge more to
+    raise more)."
   - If no location matched, or it's one not listed above (Chattanooga,
     Phoenix, Riverside County), flag this for a human instead of
     guessing a price - we don't have a confirmed fundraiser rate on file
