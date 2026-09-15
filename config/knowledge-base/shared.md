@@ -157,7 +157,7 @@ catches), draft a full quote reply rather than just saying "someone will
 follow up" - this is what Bonnie's real "Private Event Inquiry" Zendesk
 macros send every time.
 
-**Step 0 - check FUNDRAISER first, before Standard vs Corporate.** If the
+**Step 0a - check FUNDRAISER first, before Standard vs Corporate.** If the
 inquiry is about hosting a fundraiser/charity/benefit painting party
 (mentions "fundraiser", "fundraising", "charity", "benefit", "nonprofit",
 "donate"/"donation", or "cause"), use this literal template verbatim
@@ -252,8 +252,98 @@ Fill the placeholders like this:
   isn't hit) - don't mix in the general Private events minimum/deposit
   language from Steps 1-2 below.
 
+**Step 0b - check PAINTING & KIDDOS (kids' birthday parties, ages 16 and
+under) next, before Standard vs Corporate.** If the private event
+inquiry is for a child's birthday/party (the requester states a child's
+age of 16 or under, or the wording is "kid's birthday", "child's
+birthday", "son's/daughter's birthday", "kids party", or similar -
+Christopher's "Painting & Kiddos" branding, 2026-09-15), use this
+literal template verbatim (do not paraphrase or restructure it, only
+fill in the bracketed placeholders). Skip Step 1 below for these too -
+kids' parties are their own category, same as fundraisers:
+
+> Hi [customer's first name],
+>
+> Thanks so much for reaching out about hosting a private Painting &
+> Vino event for your child's birthday! Our kid's events are great for
+> ages 6+ and adults are welcome to participate as well.
+>
+> Here's a bit more info on how we can make your event truly special:
+>
+> 🏠 Venue:
+> We are a 100% mobile Paint and Sip business, which means we don't use a
+> physical studio space, but instead we bring the fun directly to you!
+> Whether you plan on hosting the event at your home or a special event
+> location, we can come to you!
+>
+> [VENUE_PARAGRAPH]
+>
+> 🎨 Materials:
+> We'll provide all the art supplies — canvases, easels, aprons, and
+> table covers. All you need to provide is the space, food, drinks, and
+> any tables or chairs (unless your venue already has them).
+>
+> 💻 Projects:
+> - Step-by-step canvas - choose a painting from our kid's painting
+>   portfolio. If you don't find what you're looking for, we can create a
+>   custom image for an additional fee of $75.
+> - 🐶 Pet Art - Great for pet lovers! You send us pet photos before the
+>   event and we show you how to create your pet portrait. Everyone will
+>   paint their own pet image. Please add $10/person for Pet Portraits.
+>
+> 💲 Pricing:
+> - Minimum Group Size: [MIN] people
+> - Price per Person: $[KIDS_RATE] per person ($[KIDS_PET_RATE] for Pet
+>   Portraits)
+> - Discounts: Available for larger groups (30+ people)
+> - Travel Fees: [TRAVEL_FEE_LINE]
+> - Deposit: To book your party, we require a deposit covering either 2
+>   seats or 20% of your expected headcount, whichever amount is higher.
+>   The rest is due the day before. The deposit is non-refundable but
+>   transferable for up to one year.
+>
+> ⏰ Timing:
+> We typically run events for 1.5-2 hours. Please note, setup and
+> cleanup time is not included.
+>
+> If you're ready to move forward or have any questions, feel free to
+> reach out! We'd love to help you create an experience that your
+> community will remember and enjoy.
+>
+> Cheers,
+> Bonnie Davila
+> Private Event Coordinator
+> Painting & Vino
+
+Fill the placeholders like this:
+- `[customer's first name]`: from the requester's name.
+- `[VENUE_PARAGRAPH]`: same placeholder and fill logic as Step 2a below
+  (Orange County/San Diego fallback wording with no link; otherwise
+  that location's restaurant/venue link; generic fallback if none on
+  file) - see Step 2a's instructions for the exact wording, don't
+  redefine it here. FLAGGED: the Tucson and Temecula/Riverside
+  restaurant links Christopher pasted with this macro (2026-09-15)
+  don't match the IDs already on file in those two locations' files -
+  confirm with Christopher which is current before relying on either
+  link.
+- `[MIN]`: same fill logic as Step 2a below (10 for Tucson and
+  Sacramento; 8 everywhere else).
+- `[KIDS_RATE]` / `[KIDS_PET_RATE]`: the Kids' events rate for the
+  matched location, plus $10/person for Pet Portraits per the Projects
+  section above - $35/$45 for most cities, $29/$39 for Kansas City,
+  $40/$50 for San Francisco.
+- `[TRAVEL_FEE_LINE]`: same fill logic as Step 2a below ("A travel fee
+  may apply for locations outside city limits." unless the matched
+  location's own file states a confirmed figure, e.g. San Francisco Bay
+  Area's $75+, in which case quote that number directly).
+- The "Discounts: Available for larger groups (30+ people)" line has no
+  specific discount amount on file yet - leave it exactly as written
+  (don't invent a number) and flag this for Christopher if a confirmed
+  figure would help.
+
 **Step 1 - classify STANDARD vs CORPORATE first** (for everything that
-isn't a fundraiser, per Step 0 above). Corporate/business: the
+isn't a fundraiser or a kids' Painting & Kiddos party, per Steps 0a and
+0b above). Corporate/business: the
 inquiry mentions a company name, "team building", "corporate", "work
 event", "office", "coworkers", or similar - confirmed against ticket
 #81048 (Tucson, corporate team-building for Bandera Healthcare's MDS
@@ -377,8 +467,10 @@ number directly instead of hedging.
 
 Kids' events (ages 6+, adults welcome too) are a separate, simpler rate:
 $35/person for most cities, $29/person in Kansas City, $40/person in San
-Francisco. A custom (non-portfolio) painting design costs an extra
-$50-75 on top of any of the above.
+Francisco (add $10/person for Pet Portraits). A custom (non-portfolio)
+painting design costs an extra $50-75 on top of any of the above (kids'
+private-party quotes use $75 - see the Painting & Kiddos template in
+Step 0b above).
 
 **Minimum group size:** 8 people for most cities; **10 people** for
 Tucson and Sacramento. San Francisco moved to the standard 8-person
@@ -397,7 +489,7 @@ least 3 days ahead), Couples Events (2 seats - each person paints one
 half of a canvas, combining into one piece at the end), and fundraisers
 ($5/person off standard rate, donated to the cause, 12-person minimum,
 requires a donation receipt with EIN if selling tickets to attendees -
-use the literal Fundraiser quote template in Step 0 above for these).
+use the literal Fundraiser quote template in Step 0a above for these).
 
 Customers can choose any painting from the portfolio (2,000-4,000+
 images depending on event type), or request a custom painting for an

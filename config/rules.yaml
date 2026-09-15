@@ -138,19 +138,27 @@ rules:
       # keywords. Applied here too in case Painting and Vino's contact form
       # uses the same format - confirm against a real ticket and adjust if
       # the wording differs.
-      any_keywords: ["book an event", "book a class", "private event", "date availability", "how do i book", "party request", "guests:", "preferred date", "fundraiser", "fundraising"]
+      any_keywords: ["book an event", "book a class", "private event", "date availability", "how do i book", "party request", "guests:", "preferred date", "fundraiser", "fundraising", "kid's birthday", "children's birthday", "kids party", "painting & kiddos"]
     action: pending
     force_human_review: true
     add_tags: ["booking_question"]
     drafting_hint: >
-      First check the shared knowledge base's Private events Step 0: if
+      First check the shared knowledge base's Private events Step 0a: if
       this is a request to plan a fundraiser/charity/benefit painting
       party (mentions "fundraiser", "fundraising", "charity", "benefit",
       "nonprofit", "donate"/"donation", or "cause"), use that section's
       literal Fundraiser quote template verbatim, filling in only the
       bracketed placeholders - do not paraphrase or restructure it, and
       skip everything below (Standard vs Corporate doesn't apply to
-      fundraisers). Otherwise, if this is a private/corporate event
+      fundraisers). Otherwise check Step 0b: if this is specifically a
+      kids' birthday/party request (the requester states a child's age
+      of 16 or under, or wording like "kid's birthday", "child's
+      birthday", "son's/daughter's birthday", "kids party", "Painting &
+      Kiddos"), use that section's literal Painting & Kiddos quote
+      template verbatim, filling in only the bracketed placeholders
+      (reusing the same [VENUE_PARAGRAPH]/[MIN]/[TRAVEL_FEE_LINE] fill
+      logic as the Standard template below) - also skip everything below
+      for these. Otherwise, if this is a private/corporate event
       pricing inquiry (a "Private Event Request"-style submission - guest
       count, event date, company name, "team building"/"corporate"/
       "celebration" language), draft a full quote reply following the
