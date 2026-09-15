@@ -138,20 +138,28 @@ rules:
       # keywords. Applied here too in case Painting and Vino's contact form
       # uses the same format - confirm against a real ticket and adjust if
       # the wording differs.
-      any_keywords: ["book an event", "book a class", "private event", "date availability", "how do i book", "party request", "guests:", "preferred date"]
+      any_keywords: ["book an event", "book a class", "private event", "date availability", "how do i book", "party request", "guests:", "preferred date", "fundraiser", "fundraising"]
     action: pending
     force_human_review: true
     add_tags: ["booking_question"]
     drafting_hint: >
-      If this is a private/corporate event pricing inquiry (a "Private
-      Event Request"-style submission - guest count, event date, company
-      name, "team building"/"corporate"/"celebration" language), draft a
-      full quote reply following the shared knowledge base's Private
-      events section - this maps to one of two real Zendesk macros
-      ("Private Event Inquiry - Corporate/Business Quote" vs "...
-      Standard Quote"), picked using the form's Company Name field plus
-      message wording (see that section for the exact classification
-      rule). For a STANDARD (non-corporate) inquiry, use the shared
+      First check the shared knowledge base's Private events Step 0: if
+      this is a request to plan a fundraiser/charity/benefit painting
+      party (mentions "fundraiser", "fundraising", "charity", "benefit",
+      "nonprofit", "donate"/"donation", or "cause"), use that section's
+      literal Fundraiser quote template verbatim, filling in only the
+      bracketed placeholders - do not paraphrase or restructure it, and
+      skip everything below (Standard vs Corporate doesn't apply to
+      fundraisers). Otherwise, if this is a private/corporate event
+      pricing inquiry (a "Private Event Request"-style submission - guest
+      count, event date, company name, "team building"/"corporate"/
+      "celebration" language), draft a full quote reply following the
+      shared knowledge base's Private events section - this maps to one
+      of two real Zendesk macros ("Private Event Inquiry -
+      Corporate/Business Quote" vs "... Standard Quote"), picked using
+      the form's Company Name field plus message wording (see that
+      section for the exact classification rule). For a STANDARD
+      (non-corporate) inquiry, use the shared
       knowledge base's literal "Standard quote template" VERBATIM,
       filling in only the bracketed placeholders - do not paraphrase or
       restructure it. For a CORPORATE/business inquiry, build the reply

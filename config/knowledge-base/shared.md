@@ -157,7 +157,101 @@ catches), draft a full quote reply rather than just saying "someone will
 follow up" - this is what Bonnie's real "Private Event Inquiry" Zendesk
 macros send every time.
 
-**Step 1 - classify STANDARD vs CORPORATE first.** Corporate/business: the
+**Step 0 - check FUNDRAISER first, before Standard vs Corporate.** If the
+inquiry is about hosting a fundraiser/charity/benefit painting party
+(mentions "fundraiser", "fundraising", "charity", "benefit", "nonprofit",
+"donate"/"donation", or "cause"), use this literal template verbatim
+(Christopher's real fundraiser quote, 2026-09-15 - do not paraphrase or
+restructure it, only fill in the bracketed placeholders). Skip Steps 1-2
+below for these - fundraisers are their own category, not Standard or
+Corporate:
+
+> Hi [customer's first name]
+>
+> Thank you so much for your interest in having Painting & Vino host your
+> Private Event! Adding a painting activity is great for any occasion.
+> Our private events are exclusive paint parties just for your group!
+> You pick the date/time/location and art project. It's all about the
+> experience and spending time with your co-workers, friends, and loved
+> ones.
+>
+> To book a Private Event with Painting & Vino:
+>
+> LOCATION:
+> All events are done on location which means we come to your home,
+> office, or venue of choice. Please note, we do not provide
+> food/beverages or tables/chairs.
+>
+> If you don't have a place for your party, we work with a variety of
+> restaurants in your area. Let us know and we'll send a list then check
+> availability. Note - food/drinks aren't included in our pricing and
+> they will expect everyone to order for use of the space.
+>
+> DATE/TIME:
+> Parties are booked in 3-hour windows with approx. 2.5 hours of paint
+> time. We are flexible with dates but will have to ensure one of our
+> instructors and venues if needed, has availability.
+>
+> PROJECT:
+> Step-by-step canvas - choose from over 2000 images in our library which
+> we will send once the event is booked or we can create a custom image
+> for $50.
+>
+> Glass painting - Each guest paints a pair of wine or beer glasses. The
+> instructor leads the group in one design step by step. Your guests can
+> also paint their own designs with the instructor's guidance.
+>
+> Pet Art - Great for pet lovers! You send us pet photos prior to the
+> event and we show you how to create your own pet portrait. Everyone
+> will paint their own pet image.
+>
+> PRICING:
+> We discount our rate by $5 per person and donate the difference to your
+> cause. You can decide the ticket price to increase the donation above
+> the rates below. We do require a donation receipt with EIN for tax
+> purposes if we sell tickets. There is a 12 person minimum to host a
+> fundraiser. If that number isn't met, we will cancel the event 48 hours
+> before and refund tickets sold.
+>
+> Standard Rate: (We discount below by $5 and you can also increase if
+> you like)
+> [FUNDRAISER_CITY_GROUP]
+>
+> We hope all this gives you the info you need, but please feel free to
+> let me know if you have other questions. I'm happy to work with you as
+> best as I can if you have a certain budget so let's keep the
+> conversation going.
+> We look forward to hearing back from you.
+>
+> Thank you,
+> Bonnie Davila
+> events@paintingandvino.com
+> Private Events Coordinator
+
+Fill the placeholders like this:
+- `[customer's first name]`: from the requester's name.
+- `[FUNDRAISER_CITY_GROUP]`: pick the line matching the matched location
+  (all figures are the pre-discount "Standard Rate" - the customer's
+  actual price is $5/person less, per the paragraph above):
+  - San Diego, Orange County, Los Angeles, Sacramento, or Tucson: "SD,
+    OC, LA, SAC, TUC: $45pp step-by-step canvas or glass/$55pp Pet
+    Portraits"
+  - Kansas City, MO: "Kansas City, MO: $39pp step-by-step canvas or
+    glass/$49pp Pet Portraits"
+  - San Francisco Bay Area: "SF: $50pp step-by-step canvas or glass/$60pp
+    Pet Portraits"
+  - If no location matched, or it's one not listed above (Chattanooga,
+    Phoenix, Riverside County), flag this for a human instead of
+    guessing a price - we don't have a confirmed fundraiser rate on file
+    for it yet.
+- This fundraiser template has its own 12-person minimum (not the 8-10
+  used elsewhere in this section) and its own deposit/cancellation terms
+  (48-hour cancellation with a refund of tickets sold if the minimum
+  isn't hit) - don't mix in the general Private events minimum/deposit
+  language from Steps 1-2 below.
+
+**Step 1 - classify STANDARD vs CORPORATE first** (for everything that
+isn't a fundraiser, per Step 0 above). Corporate/business: the
 inquiry mentions a company name, "team building", "corporate", "work
 event", "office", "coworkers", or similar - confirmed against ticket
 #81048 (Tucson, corporate team-building for Bandera Healthcare's MDS
@@ -300,7 +394,8 @@ these): glass painting, board painting, pet portraits (send pet photos at
 least 3 days ahead), Couples Events (2 seats - each person paints one
 half of a canvas, combining into one piece at the end), and fundraisers
 ($5/person off standard rate, donated to the cause, 12-person minimum,
-requires a donation receipt with EIN if selling tickets to attendees).
+requires a donation receipt with EIN if selling tickets to attendees -
+use the literal Fundraiser quote template in Step 0 above for these).
 
 Customers can choose any painting from the portfolio (2,000-4,000+
 images depending on event type), or request a custom painting for an
