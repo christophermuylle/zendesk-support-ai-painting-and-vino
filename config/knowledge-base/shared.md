@@ -146,9 +146,9 @@ policy, so don't promise it will work everywhere.
 We're 100% mobile (no studio) - we bring supplies to the customer's home,
 office, or a venue of their choice; we don't provide food, beverages,
 tables, or chairs. If the customer needs a venue, we have a list of
-partner restaurants/venues (usually no rental cost - guests are expected
-to buy food/drinks there); each location's file below has that location's
-venue link(s), if one is on file.
+partner restaurants/venues (most don't charge extra rental costs - guests
+are expected to buy food/drinks there); each location's file below has
+that location's venue link(s), if one is on file.
 
 For a private/corporate event pricing inquiry (guest count, event date,
 company name, "team building"/"corporate"/"celebration" language - this
@@ -402,16 +402,16 @@ Fill the placeholders like this:
   confirmed figure (e.g. San Francisco Bay Area's $75+ for 30+ minutes
   outside San Mateo), in which case quote that number directly instead.
 - `[VENUE_PARAGRAPH]`: if the matched location is Orange County or San
-  Diego, use "Need a venue? We have restaurant partners available, most
-  with no rental cost - guests just purchase food and drinks. We can send
-  a list of partners once we confirm which artist would be available for
-  your party." (no link - none is on file for those two). Otherwise, if
-  the location has a restaurant/venue link on file, use "Need a venue? We
-  have restaurant partners available at no rental cost — guests just
-  purchase food and drinks. Here's the list for [location]: [that
-  location's restaurant list link]." If no location matched or it has no
-  link on file, use the Orange County/San Diego fallback wording instead
-  of inventing a link.
+  Diego, use "Need a venue? We have restaurant partners available and
+  most don't charge extra rental costs - guests just purchase food and
+  drinks. We can send a list of partners once we confirm which artist
+  would be available for your party." (no link - none is on file for
+  those two). Otherwise, if the location has a restaurant/venue link on
+  file, use "Need a venue? We have restaurant partners available and
+  most don't charge extra rental costs — guests just purchase food and
+  drinks. Here's the list for [location]: [that location's restaurant
+  list link]." If no location matched or it has no link on file, use the
+  Orange County/San Diego fallback wording instead of inventing a link.
 
 **Step 2b - CORPORATE/business inquiries:** we don't have Bonnie's
 literal corporate macro text on file yet (flag this for Christopher if
@@ -426,10 +426,10 @@ using the Corporate/Business pricing column:
    (see that location's Private events section; 8 is the fallback if the
    location file doesn't say otherwise).
 3. State the deposit policy (below).
-4. Offer a venue if they need one, using that location's venue link(s)
-   from its Private events section. If the location has no link on file,
-   say we'll send a list of partners once we confirm which artist is
-   available - don't invent a link.
+4. Offer a venue if they need one, using the same `[VENUE_PARAGRAPH]`
+   wording and fill logic as Step 2a above (partner restaurants, and
+   most don't charge extra rental costs) - don't redefine it here, and
+   don't invent a link if the location has none on file.
 5. Mention other project options are available on request (glass
    painting, tote bags, wood signs, pet portraits, etc.)
 6. Invite them to reply or schedule a call to lock in the date, and sign
