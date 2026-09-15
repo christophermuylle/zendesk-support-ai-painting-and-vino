@@ -266,49 +266,44 @@ kids' parties are their own category, same as fundraisers:
 >
 > Thanks so much for reaching out about hosting a private Painting &
 > Vino event for your child's birthday! Our kid's events are great for
-> ages 6+ and adults are welcome to participate as well.
+> ages 6+, and adults are welcome to join in the fun too.
 >
-> Here's a bit more info on how we can make your event truly special:
+> See what a party looks like: https://paintingandvino.com/paint-sip-private-events/
 >
-> 🏠 Venue:
-> We are a 100% mobile Paint and Sip business, which means we don't use a
-> physical studio space, but instead we bring the fun directly to you!
-> Whether you plan on hosting the event at your home or a special event
-> location, we can come to you!
+> **🏠 Venue:**
+> We're a 100% mobile Paint and Sip business — we don't have a studio
+> space, so we bring the fun directly to you! Whether you're hosting at
+> home or a special event location, we can come to you.
 >
 > [VENUE_PARAGRAPH]
 >
-> 🎨 Materials:
-> We'll provide all the art supplies — canvases, easels, aprons, and
-> table covers. All you need to provide is the space, food, drinks, and
-> any tables or chairs (unless your venue already has them).
+> **🎨 Materials:**
+> We provide all the art supplies — canvases, easels, aprons, and table
+> covers. You just need to provide the space, food, and drinks; tables
+> and chairs too, unless your venue already has them.
 >
-> 💻 Projects:
-> - Step-by-step canvas - choose a painting from our kid's painting
->   portfolio. If you don't find what you're looking for, we can create a
->   custom image for an additional fee of $75.
-> - 🐶 Pet Art - Great for pet lovers! You send us pet photos before the
->   event and we show you how to create your pet portrait. Everyone will
->   paint their own pet image. Please add $10/person for Pet Portraits.
+> **🖼️ Projects:**
+> - Step-by-step canvas — choose a painting from our kid's portfolio, or
+>   we can create a custom design for an extra $75.
+> - 🐶 Pet Art — send us pet photos ahead of time and we'll show your
+>   guests how to paint their own pet portrait (add $10/person).
 >
-> 💲 Pricing:
-> - Minimum Group Size: [MIN] people
-> - Price per Person: $[KIDS_RATE] per person ($[KIDS_PET_RATE] for Pet
->   Portraits)
-> - Discounts: Available for larger groups (30+ people)
-> - Travel Fees: [TRAVEL_FEE_LINE]
-> - Deposit: To book your party, we require a deposit covering either 2
->   seats or 20% of your expected headcount, whichever amount is higher.
->   The rest is due the day before. The deposit is non-refundable but
+> **💲 Pricing:**
+> - Minimum group size: [MIN] people
+> - Per person: $[KIDS_RATE] ($[KIDS_PET_RATE] for Pet Portraits)
+> - Discounts available for larger groups (30+ people)
+> - Travel fee: [TRAVEL_FEE_LINE]
+> - Deposit: 2 seats or 20% of your expected headcount, whichever is
+>   higher. The rest is due the day before. Non-refundable, but
 >   transferable for up to one year.
 >
-> ⏰ Timing:
-> We typically run events for 1.5-2 hours. Please note, setup and
-> cleanup time is not included.
+> **⏰ Timing:**
+> Events typically run 1.5-2 hours (setup and cleanup time not
+> included).
 >
-> If you're ready to move forward or have any questions, feel free to
-> reach out! We'd love to help you create an experience that your
-> community will remember and enjoy.
+> This gives you everything you need to get started, but I'm happy to
+> answer any other questions! Reply with your preferred date, guest
+> count, and city, and I'll get a firmed-up quote over to you.
 >
 > Cheers,
 > Bonnie Davila
@@ -321,11 +316,11 @@ Fill the placeholders like this:
   (Orange County/San Diego fallback wording with no link; otherwise
   that location's restaurant/venue link; generic fallback if none on
   file) - see Step 2a's instructions for the exact wording, don't
-  redefine it here. FLAGGED: the Tucson and Temecula/Riverside
-  restaurant links Christopher pasted with this macro (2026-09-15)
-  don't match the IDs already on file in those two locations' files -
-  confirm with Christopher which is current before relying on either
-  link.
+  redefine it here. Confirmed by Christopher (2026-09-15) to use
+  whatever link is already on file for each location (same as the
+  Standard template) rather than the ones pasted with the original
+  Painting & Kiddos macro, which he says are outdated - he'll update his
+  own macros to match.
 - `[MIN]`: same fill logic as Step 2a below (10 for Tucson and
   Sacramento; 8 everywhere else).
 - `[KIDS_RATE]` / `[KIDS_PET_RATE]`: the Kids' events rate for the
