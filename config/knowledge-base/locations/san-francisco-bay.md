@@ -31,14 +31,23 @@ Francisco rather than the generic "a fee may apply, don't quote an
 amount" instruction in shared.md; that instruction is for locations
 without a confirmed number.
 
+IMPORTANT - San Francisco has its own guest-count pricing tiers, separate
+from every other location (confirmed by Christopher, 2026-09-16, after a
+Corporate SF quote wrongly used the generic "most cities" table and
+quoted $40/person instead of San Francisco's real $45 - see ticket
+#81129). For the default 16x20 canvas, use San Francisco's own Standard/
+Corporate table in shared.md's Private events "Pricing" section (50/45/40
+Standard, 55/50/45 Corporate) - never the generic 45/40/35 table meant
+for other cities. The 16x20 canvas row in the Project menu below ($50
+Standard / $55 Corporate) is that table's 8-29-guest tier, for reference.
+
 Project menu (offer only if the customer wants something other than the
-default 16x20 canvas - otherwise just quote shared.md's per-person
-Standard/Corporate guest-count price as normal). Use the Standard list for
-birthdays/bachelorette/other personal celebrations, the Corporate list for
-company/team-building inquiries - same Standard vs Corporate classification
-shared.md's Step 1 uses for the main guest-count table (Corporate runs a
-flat +$5/person over Standard on every project, matching that table's own
-+$5 corporate markup):
+default 16x20 canvas). Use the Standard list for birthdays/bachelorette/
+other personal celebrations, the Corporate list for company/team-building
+inquiries - same Standard vs Corporate classification shared.md's Step 1
+uses for the main guest-count table (Corporate runs a flat +$5/person
+over Standard on every non-canvas project, matching that table's own +$5
+corporate markup):
 
 Standard:
 - 11x14 canvas: $48/person

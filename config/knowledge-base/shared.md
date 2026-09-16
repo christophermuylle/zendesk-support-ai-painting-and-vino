@@ -390,10 +390,15 @@ the bracketed placeholders):
 Fill the placeholders like this:
 - `[customer's first name]`: from the requester's name.
 - `$[STANDARD_1/2/3]`: the **Standard** column of the pricing table below
-  for the matched location, at the guest count they gave - Kansas City
-  uses its own lower Standard tier (39/35/30), every other location uses
-  45/40/35. Never use a Corporate/Business figure here (50/45/40 or
-  44/40/35) - this template is standard-only.
+  for the matched location's own group, at the guest count they gave -
+  San Diego, Orange County, Los Angeles, Sacramento, Riverside County/
+  Temecula, Tucson, and Phoenix use 45/40/35; Kansas City uses its own
+  lower tier (39/35/30); **San Francisco Bay Area uses its own higher
+  tier (50/45/40) - do not use the 45/40/35 table for it**, confirmed
+  against ticket #81129 (a Corporate SF event was quoted $40/person from
+  the wrong table instead of its real Corporate rate). Never use a
+  Corporate/Business figure here (50/45/40, 44/40/35, or 55/50/45) - this
+  template is standard-only.
 - `[MIN]`: that location's minimum group size (10 for Tucson and
   Sacramento; 8 everywhere else, including San Francisco, per that
   location's Private events section).
@@ -421,10 +426,21 @@ using the Corporate/Business pricing column:
 1. Thank them for reaching out, briefly note we're fully mobile (bring
    canvases, easels, aprons, table covers - customer provides the space,
    tables, and chairs, and may serve their own food/drinks).
-2. Quote the per-person Corporate/Business price for their exact guest
-   count from the table below. State the location's minimum group size
-   (see that location's Private events section; 8 is the fallback if the
-   location file doesn't say otherwise).
+2. Quote the per-person Corporate/Business price from the **matched
+   location's own table below** - San Diego, Orange County, Los Angeles,
+   Sacramento, Riverside County/Temecula, Tucson, and Phoenix share one
+   table (50/45/40); Kansas City has its own lower table (44/40/35); San
+   Francisco Bay Area has its own higher table (55/50/45) - never apply
+   the wrong location's numbers (this exact mix-up quoted $40/person
+   instead of $45 for a 50-person Corporate San Francisco event, ticket
+   #81129, 2026-09-16). If the guest count is under 30, quote just the
+   single tier matching their stated count. **If it's 30 or more, quote
+   the full three-tier table instead of only the matching number** (per
+   Christopher, 2026-09-16) - groups that size often don't land on the
+   headcount they started with, so showing all three tiers lets the
+   customer see how the price moves either way. State the location's
+   minimum group size (see that location's Private events section; 8 is
+   the fallback if the location file doesn't say otherwise).
 3. State the deposit policy (below).
 4. Offer a venue if they need one, using the same `[VENUE_PARAGRAPH]`
    wording and fill logic as Step 2a above (partner restaurants, and
@@ -438,9 +454,17 @@ using the Corporate/Business pricing column:
    actually sends them (every AI draft is held for human review before
    sending anyway, so this matches what Bonnie would sign herself).
 
-**Pricing (per person, 3-hour event, standard 16x20 canvas):**
+**Pricing (per person, 3-hour event, standard 16x20 canvas) - three
+separate tables, one per location group. Confirm which group the matched
+location falls into before quoting - don't assume "most cities" numbers
+apply everywhere (see ticket #81129, 2026-09-16, where a Corporate San
+Francisco quote used this first table's $40 instead of San Francisco's
+own $45):**
 
-| Guests | Standard (most cities) | Corporate/Business (most cities) |
+San Diego, Orange County, Los Angeles, Sacramento, Riverside County/
+Temecula, Tucson, and Phoenix:
+
+| Guests | Standard | Corporate/Business |
 | --- | --- | --- |
 | 8-29  | $45/person | $50/person |
 | 30-49 | $40/person | $45/person |
@@ -453,6 +477,17 @@ Kansas City runs its own lower tier:
 | 8-29  | $39/person | $44/person |
 | 30-49 | $35/person | $40/person |
 | 50+   | $30/person | $35/person |
+
+San Francisco Bay Area runs its own higher tier (confirmed by
+Christopher, 2026-09-16 - matches the $50/$55 16x20-canvas rate already
+on file in that location's own Project menu, which is this table's 8-29
+row):
+
+| Guests | Standard (San Francisco) | Corporate/Business (San Francisco) |
+| --- | --- | --- |
+| 8-29  | $50/person | $55/person |
+| 30-49 | $45/person | $50/person |
+| 50+   | $40/person | $45/person |
 
 A travel fee may apply for locations outside city limits - flag that
 possibility but don't quote an amount (a human confirms it), UNLESS that
