@@ -158,7 +158,27 @@ rules:
       # pipeline.ts), missing this keyword also meant Los Angeles never
       # got matched as a location, even though it was right there in the
       # subject line.
-      any_keywords: ["book an event", "book a class", "private event", "private party", "date availability", "how do i book", "party request", "guests:", "preferred date", "fundraiser", "fundraising", "kid's birthday", "children's birthday", "kids party", "painting & kiddos", "team building", "corporate event", "party of", "birthday party"]
+      # "birthday", "bachelorette", "bachelor party", "anniversary",
+      # "celebration", "painting event", "paint night" added 2026-09-18
+      # after Christopher tested FOUR more realistic phrasings and every
+      # single one fell through to fallback_unclassified: "birthday bash"
+      # (no "party"), "bachelorette party" (not covered by any keyword),
+      # "painting event for our office" (no "corporate"/"team
+      # building"/"private event"), and "Sweet 16 birthday" (no "kid's
+      # birthday"/"birthday party" phrasing). This confirmed the pattern
+      # is systemic, not one-off: shared.md's own Step 1 explicitly lists
+      # "birthdays, bachelorette/bridal, anniversaries, family/friend
+      # celebrations" as in-scope Standard private events, but several of
+      # those words were never in this keyword list at all. Broadened
+      # deliberately toward higher recall here (some risk of matching an
+      # unrelated FAQ that happens to mention "birthday" or
+      # "celebration") because the drafting_hint below already has a
+      # graceful fallback for that case ("a general public booking/
+      # date-availability question that ISN'T a private event quote, just
+      # point them to the booking page") - a false match here costs an
+      # unnecessary internal draft a human ignores; a missed match costs
+      # a real quote request going completely unanswered, which is worse.
+      any_keywords: ["book an event", "book a class", "private event", "private party", "date availability", "how do i book", "party request", "guests:", "preferred date", "fundraiser", "fundraising", "kid's birthday", "children's birthday", "kids party", "painting & kiddos", "team building", "corporate event", "party of", "birthday party", "birthday", "bachelorette", "bachelor party", "anniversary", "celebration", "painting event", "paint night"]
     action: pending
     force_human_review: true
     add_tags: ["booking_question"]
