@@ -346,7 +346,14 @@ nurses, 17 guests, 11/19/2026 - Bonnie's actual reply quoted $50/person,
 the corporate 8-29-guest tier, with Tucson's 10-guest minimum, and
 pointed to Tucson's restaurant + pricing/project list links). Everything
 else (birthdays, bachelorette/bridal, anniversaries, family/friend
-celebrations, unspecified personal events) is STANDARD.
+celebrations, unspecified personal events, **and apartment/condo/HOA
+community events - a resident event for an apartment complex, condo
+association, or homeowners association**) is STANDARD (confirmed by
+Christopher, 2026-09-18 - don't be misled by "association" sounding
+organizational: an HOA or condo association planning something for its
+own residents is a personal/community event, not a business inquiry,
+even though the requester may be emailing on the association's behalf
+rather than their own).
 
 **Step 2a - STANDARD inquiries: use this literal template verbatim**
 (Christopher's real "Private event - standard quote" Zendesk macro,
