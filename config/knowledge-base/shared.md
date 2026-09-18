@@ -135,13 +135,14 @@ policy, so don't promise it will work everywhere.
 
 ## Private events
 
-<!-- FLAGGED: the old paint-and-sip-faq page said a 15-person minimum;
-     the team's actual macros (used daily to quote real customers) say
-     8 people minimum for most cities, 10 for Tucson/Sacramento. This
-     file now follows the macros. Please confirm 15 was outdated FAQ
-     copy and not the other way around. San Francisco moved from a
-     10-person to the standard 8-person minimum per Jessica,
-     2026-09-15 (see that location's Private events section). -->
+<!-- The old paint-and-sip-faq page said a 15-person minimum; the team's
+     actual macros (used daily to quote real customers) say 8 people
+     minimum for most cities, 10 for Tucson/Sacramento. Confirmed by
+     Christopher (2026-09-18): the 15-person figure was outdated FAQ
+     copy, not the other way around - this file's macro-based minimums
+     are correct. San Francisco moved from a 10-person to the standard
+     8-person minimum per Jessica, 2026-09-15 (see that location's
+     Private events section). -->
 
 We're 100% mobile (no studio) - we bring supplies to the customer's home,
 office, or a venue of their choice; we don't provide food, beverages,
