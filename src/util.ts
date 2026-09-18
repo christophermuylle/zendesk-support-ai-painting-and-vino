@@ -1,4 +1,4 @@
-import type { TicketContext } from "./types.js";
+import type { TicketContext, ZendeskComment } from "./types.js";
 
 /**
  * Text used for keyword matching across rules.ts and locations.ts: the
@@ -32,4 +32,31 @@ export function extractOrderTotal(text: string): number | null {
   if (!match) return null;
   const value = Number(match[1].replace(/,/g, ""));
   return Number.isNaN(value) ? null : value;
+}
+
+/** The most recent comment on a ticket, or null if there are none (shouldn't happen in practice). */
+export function getLatestComment(ctx: TicketContext): ZendeskComment | null {
+  return ctx.comments.length ? ctx.comments[ctx.comments.length - 1] : null;
+}
+
+/**
+ * True if a comment's body is basically just a "RECEIVED" confirmation -
+ * used by pipeline.ts's licensee_initial_response branch (Christopher,
+ * 2026-09-18) to auto-close a licensee application ticket once the
+ * applicant confirms our deliverability-check message landed, instead of
+ * leaving every one of these for a human to close by hand.
+ *
+ * Deliberately narrow: the word "received" has to be present AND the whole
+ * message has to be short (<= 40 characters after stripping punctuation) -
+ * this catches "Received", "received.", "RECEIVED!", "received, thanks"
+ * etc., but NOT a longer message that happens to mention "received" in
+ * passing (e.g. "I received your email but I actually have a question
+ * about my territory") - that should still go to a human, not auto-close.
+ */
+export function looksLikeReceivedConfirmation(body: string): boolean {
+  const cleaned = (body ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[.!,;:]/g, "");
+  return cleaned.includes("received") && cleaned.length <= 40;
 }

@@ -279,6 +279,82 @@ Google`,
     },
   },
   {
+    label: "Christopher's test: licensee applicant replies RECEIVED - should auto-resolve, no human needed",
+    ctx: {
+      ticket: {
+        id: 22,
+        subject: "New submission from Licensee Application",
+        description: `Name
+Jordan Applicant
+Email
+jordan@example.com
+How did you hear about this opportunity?
+Google`,
+        // Zendesk auto-reopens a solved ticket when the requester replies -
+        // this simulates that reopened state at the moment our webhook
+        // re-fires on the "RECEIVED" reply.
+        status: "open",
+        requester_id: CUSTOMER_ID,
+        tags: ["artist__licensee_or_venue"],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Jordan Applicant", email: "jordan@example.com" },
+      comments: [
+        makeComment(
+          `Name
+Jordan Applicant
+Email
+jordan@example.com
+How did you hear about this opportunity?
+Google`,
+          CUSTOMER_ID
+        ),
+        makeComment('Please respond with "RECEIVED" so we know you are receiving our responses.', 999), // the agent/bot's own initial reply
+        makeComment("RECEIVED", CUSTOMER_ID),
+      ],
+      brand: "painting_and_vino",
+    },
+  },
+  {
+    label: "Christopher's test: licensee applicant replies with a real question (mentions 'received' in passing) - should NOT auto-resolve, still needs a human",
+    ctx: {
+      ticket: {
+        id: 23,
+        subject: "New submission from Licensee Application",
+        description: `Name
+Alex Hopeful
+Email
+alex@example.com
+How did you hear about this opportunity?
+Instagram`,
+        status: "open",
+        requester_id: CUSTOMER_ID,
+        tags: ["artist__licensee_or_venue"],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Alex Hopeful", email: "alex@example.com" },
+      comments: [
+        makeComment(
+          `Name
+Alex Hopeful
+Email
+alex@example.com
+How did you hear about this opportunity?
+Instagram`,
+          CUSTOMER_ID
+        ),
+        makeComment('Please respond with "RECEIVED" so we know you are receiving our responses.', 999),
+        makeComment(
+          "I received your email but I actually have a question about territory availability before I confirm anything.",
+          CUSTOMER_ID
+        ),
+      ],
+      brand: "painting_and_vino",
+    },
+  },
+  {
     label: "No location identified - pricing question with no city mentioned (should ask, not guess)",
     ctx: {
       ticket: {

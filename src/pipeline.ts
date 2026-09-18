@@ -16,7 +16,7 @@ import {
   PRIVATE_EVENT_LOCATION_TAG_PREFIX,
 } from "./config.js";
 import type { DraftResult, RuleDecision, TicketContext } from "./types.js";
-import { extractOrderTotal } from "./util.js";
+import { extractOrderTotal, getLatestComment, looksLikeReceivedConfirmation } from "./util.js";
 
 export interface PipelineResult {
   ticketId: number;
@@ -36,6 +36,7 @@ export interface PipelineResult {
     | "order_confirmation_left_open"
     | "licensee_initial_response_sent"
     | "licensee_initial_response_already_sent"
+    | "licensee_received_confirmed_resolved"
     | "no_op";
   mode: Mode;
 }
@@ -156,6 +157,44 @@ export async function processTicket(deps: PipelineDeps, ticketId: number): Promi
     // ("artist__licensee_or_venue") to the ticket - its presence means "the
     // fixed reply already went out," so skip rather than send it again.
     if (ctx.ticket.tags.includes(LICENSEE_INITIAL_RESPONSE_FIELD_VALUE)) {
+      // AUTO-RESOLVE ON "RECEIVED" (added 2026-09-18 per Christopher): the
+      // fixed reply above solves the ticket the moment it sends, so when
+      // the applicant's "RECEIVED" reply lands, Zendesk auto-reopens the
+      // ticket (its normal behavior for any reply to a solved ticket) and
+      // this webhook fires again. Before this, that re-trigger was a pure
+      // no-op (see the idempotency guard note above) - correct for
+      // preventing a duplicate "please respond RECEIVED" send, but it also
+      // meant every single one of these sat reopened in the queue for a
+      // human to close by hand, even a clean, simple confirmation. Now: if
+      // the ticket isn't already solved AND the latest reply is basically
+      // just "RECEIVED" (see looksLikeReceivedConfirmation - deliberately
+      // narrow, so a longer message that happens to mention "received" in
+      // passing still goes to a human instead of being silently closed),
+      // close it again with no further reply needed - matching what a
+      // human would do by hand for a clean confirmation. Anything else
+      // (a real question, an unrelated reply, silence) still falls through
+      // to the plain no-op below, same as before.
+      const latest = getLatestComment(ctx);
+      const isReceivedConfirmation =
+        ctx.ticket.status !== "solved" &&
+        latest?.public &&
+        latest.author_id === ctx.ticket.requester_id &&
+        looksLikeReceivedConfirmation(latest.body);
+
+      if (isReceivedConfirmation) {
+        await deps.zendesk.updateTicket(ticketId, {
+          status: "solved",
+          addTags: ["licensee_received_confirmed"],
+        });
+        return {
+          ticketId,
+          ruleDecision,
+          matchedLocation: null,
+          finalAction: "licensee_received_confirmed_resolved",
+          mode: deps.mode,
+        };
+      }
+
       return {
         ticketId,
         ruleDecision,
