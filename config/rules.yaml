@@ -191,7 +191,17 @@ rules:
       # residents".
       any_keywords: ["book an event", "book a class", "private event", "private party", "date availability", "how do i book", "party request", "guests:", "preferred date", "fundraiser", "fundraising", "kid's birthday", "children's birthday", "kids party", "painting & kiddos", "team building", "corporate event", "party of", "birthday party", "birthday", "bachelorette", "bachelor party", "anniversary", "celebration", "painting event", "paint night", "for my apartment", "apartment complex", "my condo association", "condo association", "my hoa", "our hoa", "my community", "our community", "my residents", "our residents"]
     action: pending
-    force_human_review: true
+    # force_human_review flipped false + bypass_draft_mode_for_auto_send
+    # added 2026-09-18 per Christopher: private event quotes should send
+    # automatically, not wait for a human to review/send them (unlike every
+    # other category on this brand, which is unaffected and still held for
+    # review as before - see pipeline.ts's mustHoldForHuman for the exact
+    # mechanism, including the "still holds if the AI's own confidence isn't
+    # high" safety gate). This is also what gives the automated 24h/72h/120h
+    # no-response follow-up sequence (src/followups.ts) a real "the quote
+    # actually went out" moment to start its clock from.
+    force_human_review: false
+    bypass_draft_mode_for_auto_send: true
     add_tags: ["booking_question"]
     drafting_hint: >
       First check the shared knowledge base's Private events Step 0a: if

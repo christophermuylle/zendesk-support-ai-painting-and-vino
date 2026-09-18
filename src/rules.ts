@@ -12,6 +12,7 @@ interface RawRule {
   };
   action: ActionType;
   force_human_review: boolean;
+  bypass_draft_mode_for_auto_send?: boolean;
   add_tags?: string[];
   drafting_hint?: string;
 }
@@ -44,6 +45,7 @@ export class RulesEngine {
           matchedRule: rule.name,
           addTags: rule.add_tags,
           forceHumanReview: rule.force_human_review,
+          bypassDraftModeForAutoSend: rule.bypass_draft_mode_for_auto_send,
           draftingHint: rule.drafting_hint,
         };
       }

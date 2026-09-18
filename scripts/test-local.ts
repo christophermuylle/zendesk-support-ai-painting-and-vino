@@ -38,14 +38,26 @@ class MockZendeskClient implements IZendeskClient {
   async postComment(
     ticketId: number,
     body: string,
-    opts: { isPublic: boolean; status?: ActionType; addTags?: string[]; fields?: Array<{ id: number; value: string | null }> }
+    opts: {
+      isPublic: boolean;
+      status?: ActionType;
+      addTags?: string[];
+      fields?: Array<{ id: number; value: string | null }>;
+      htmlBody?: string;
+    }
   ): Promise<void> {
     const nl = String.fromCharCode(10);
+    const shown = opts.htmlBody ? `[htmlBody] ${opts.htmlBody}` : body;
     console.log(nl + `  -> would post comment (public=${opts.isPublic}, status=${opts.status ?? "unchanged"}, tags=${opts.addTags?.join(",") ?? "-"}, fields=${JSON.stringify(opts.fields ?? [])}):`);
-    console.log(`     "${body.split(nl).join(nl + "     ")}"`);
+    console.log(`     "${shown.split(nl).join(nl + "     ")}"`);
   }
   async updateTicket(ticketId: number, opts: { status?: string; addTags?: string[]; fields?: Array<{ id: number; value: string | null }> }): Promise<void> {
     console.log(String.fromCharCode(10) + `  -> would set status=${opts.status ?? "unchanged"}, tags+=${opts.addTags?.join(",") ?? "-"}, fields=${JSON.stringify(opts.fields ?? [])}, no reply (out of scope)`);
+  }
+  async searchTicketIds(): Promise<number[]> {
+    // Not exercised by this per-scenario harness (see src/followups.ts for
+    // the follow-up poller this backs) - no real Zendesk to search here.
+    return [];
   }
 }
 
@@ -53,11 +65,25 @@ class MockZendeskClient implements IZendeskClient {
 // tested offline. Produces an obviously-fake reply that echoes the rule decision. ---
 class MockAiDrafter implements IAiDrafter {
   async draftReply(ctx: TicketContext, _kb: string, rule: RuleDecision): Promise<DraftResult> {
+    // Test-only hook: a ticket tagged "test_force_high_confidence" simulates
+    // a confident real AI quote, so the auto-send path (pipeline.ts's
+    // autoSendEligible - bypassDraftModeForAutoSend + confidence "high") can
+    // be exercised offline without a real Anthropic API key. A second tag,
+    // "test_event_category_corporate", picks which eventCategory to
+    // simulate (defaults to "standard" if absent). Every other scenario is
+    // unaffected - still "medium" confidence, still held for review, same
+    // as before this follow-up feature existed.
+    const forceHighConfidence = ctx.ticket.tags.includes("test_force_high_confidence");
     return {
       replyBody: `[MOCK DRAFT - no ANTHROPIC_API_KEY set] Hi ${ctx.requester?.name ?? "there"}, thanks for reaching out about "${ctx.ticket.subject}". (rule=${rule.matchedRule})`,
       suggestedAction: rule.action,
-      confidence: "medium",
+      confidence: forceHighConfidence ? "high" : "medium",
       reasoning: "Mock drafter - set ANTHROPIC_API_KEY to test real AI output.",
+      eventCategory: forceHighConfidence
+        ? ctx.ticket.tags.includes("test_event_category_corporate")
+          ? "corporate"
+          : "standard"
+        : null,
     };
   }
 }
@@ -270,10 +296,228 @@ Google`,
       brand: "painting_and_vino",
     },
   },
+  {
+    label: "Christopher's test: Jean, Tucson corporate team building, party of 10 (should be event_booking_question -> pending, Step 1/2b Corporate)",
+    ctx: {
+      ticket: {
+        id: 10,
+        subject: "New message from Tucson, AZ Contact Form",
+        description: "Hi, my name is Jean. I'd like to book a corporate team building event in Tucson for a party of 10 people.",
+        status: "new",
+        requester_id: CUSTOMER_ID,
+        tags: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Jean", email: "jean@example.com" },
+      comments: [makeComment("Hi, my name is Jean. I'd like to book a corporate team building event in Tucson for a party of 10 people.", CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
+  {
+    label: "Regression: Painting & Kiddos - kid's birthday party, should also be event_booking_question -> pending",
+    ctx: {
+      ticket: {
+        id: 11,
+        subject: "New message from Sacramento, CA Contact Form",
+        description: "Hi, I want to book a kid's birthday party for my daughter who is turning 8, in Sacramento, 12 guests.",
+        status: "new",
+        requester_id: CUSTOMER_ID,
+        tags: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Riley Parent", email: "riley@example.com" },
+      comments: [makeComment("Hi, I want to book a kid's birthday party for my daughter who is turning 8, in Sacramento, 12 guests.", CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
+  {
+    label: "Regression: Fundraiser - charity event in San Francisco, should also be event_booking_question -> pending",
+    ctx: {
+      ticket: {
+        id: 12,
+        subject: "New message from San Francisco Bay Area, CA Contact Form",
+        description: "Hi, I'm organizing a fundraiser painting party for our nonprofit's cause in San Francisco, about 20 guests.",
+        status: "new",
+        requester_id: CUSTOMER_ID,
+        tags: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Morgan Nonprofit", email: "morgan.nonprofit@example.com" },
+      comments: [makeComment("Hi, I'm organizing a fundraiser painting party for our nonprofit's cause in San Francisco, about 20 guests.", CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
+  {
+    label: "Christopher's test: Jessica, group of 6, private party in LA, no stated purpose (should be event_booking_question -> pending, Step 1/2a Standard; below the 8-person minimum)",
+    ctx: {
+      ticket: {
+        id: 13,
+        subject: "New message from Los Angeles, CA Contact Form",
+        description: "Hi, my name is Jessica and I have a group of 6 people for a private party in Los Angeles.",
+        status: "new",
+        requester_id: CUSTOMER_ID,
+        tags: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Jessica", email: "jessica@example.com" },
+      comments: [makeComment("Hi, my name is Jessica and I have a group of 6 people for a private party in Los Angeles.", CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
+  {
+    label: "Regression: ticket #81129 - San Francisco Corporate event, 50 employees (should be event_booking_question -> pending, Step 1/2b Corporate, quoting SF's own 55/50/45 table, not the generic 50/45/40 one)",
+    ctx: {
+      ticket: {
+        id: 14,
+        subject: "New message from San Francisco Bay Area, CA Contact Form",
+        description: "Hi, I'd like to book a private event for 50 of our employees in San Francisco - it's a corporate team building event.",
+        status: "new",
+        requester_id: CUSTOMER_ID,
+        tags: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Devon Manager", email: "devon.manager@example.com" },
+      comments: [makeComment("Hi, I'd like to book a private event for 50 of our employees in San Francisco - it's a corporate team building event.", CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
+  {
+    label: "Christopher's test: birthday bash, 25 people, Sacramento - no 'party' or 'book an event' wording (should be event_booking_question -> pending, Step 1/2a Standard)",
+    ctx: {
+      ticket: {
+        id: 15,
+        subject: "New message from Sacramento, CA Contact Form",
+        description: "Hi, I'm planning a birthday bash for 25 people in Sacramento next month. Can you send me pricing?",
+        status: "new",
+        requester_id: CUSTOMER_ID,
+        tags: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Taylor Host", email: "taylor.host@example.com" },
+      comments: [makeComment("Hi, I'm planning a birthday bash for 25 people in Sacramento next month. Can you send me pricing?", CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
+  {
+    label: "Christopher's test: bachelorette party, 15 people, San Diego (Standard category per shared.md's own Step 1, but not covered by any keyword - should be event_booking_question -> pending, Step 1/2a Standard)",
+    ctx: {
+      ticket: {
+        id: 16,
+        subject: "New message from San Diego, CA Contact Form",
+        description: "Hi, can you host a bachelorette party for 15 of us in San Diego? Looking at a Saturday in October.",
+        status: "new",
+        requester_id: CUSTOMER_ID,
+        tags: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Brianna Bride", email: "brianna.bride@example.com" },
+      comments: [makeComment("Hi, can you host a bachelorette party for 15 of us in San Diego? Looking at a Saturday in October.", CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
+  {
+    label: "Christopher's test: generic office event, 40 people, Riverside County - no 'corporate'/'team building'/'private event' wording (should be event_booking_question -> pending, Step 1/2b Corporate)",
+    ctx: {
+      ticket: {
+        id: 17,
+        subject: "New message from Riverside County, CA Contact Form",
+        description: "Hi, I'm looking to set up a painting event for our office of 40 people in Riverside. What would that run us?",
+        status: "new",
+        requester_id: CUSTOMER_ID,
+        tags: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Priya Office Manager", email: "priya.office@example.com" },
+      comments: [makeComment("Hi, I'm looking to set up a painting event for our office of 40 people in Riverside. What would that run us?", CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
+  {
+    label: "Christopher's test: daughter's Sweet 16, 12 people, Phoenix - Kiddos/Standard age-boundary case, no explicit 'kid's birthday' wording (should be event_booking_question -> pending)",
+    ctx: {
+      ticket: {
+        id: 18,
+        subject: "New message from Phoenix, AZ Contact Form",
+        description: "Hi, I'd like pricing for a 12-person paint night for my daughter's Sweet 16 birthday in Phoenix.",
+        status: "new",
+        requester_id: CUSTOMER_ID,
+        tags: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Monica Parent", email: "monica.parent@example.com" },
+      comments: [makeComment("Hi, I'd like pricing for a 12-person paint night for my daughter's Sweet 16 birthday in Phoenix.", CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
+  {
+    label: "Christopher's test: HOA community event for residents, 35 people, Orange County - should be event_booking_question -> pending, Step 1/2a STANDARD (not Corporate, despite 'association' wording)",
+    ctx: {
+      ticket: {
+        id: 19,
+        subject: "New message from Orange County, CA Contact Form",
+        description: "Hi, I'm on the board of our HOA and we'd like to host a private painting event for our residents. We're expecting around 35 people. Can you send pricing?",
+        status: "new",
+        requester_id: CUSTOMER_ID,
+        tags: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Gary Board Member", email: "gary.board@example.com" },
+      comments: [makeComment("Hi, I'm on the board of our HOA and we'd like to host a private painting event for our residents. We're expecting around 35 people. Can you send pricing?", CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
+  {
+    label: "Christopher's test: condo association event, 20 residents, Tucson, no 'private event'/'painting event' wording (should be event_booking_question -> pending, Step 1/2a STANDARD)",
+    ctx: {
+      ticket: {
+        id: 20,
+        subject: "New message from Tucson, AZ Contact Form",
+        description: "Hello, my condo association wants to plan something fun for our residents - about 20 people. Do you do this kind of thing?",
+        status: "new",
+        requester_id: CUSTOMER_ID,
+        tags: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Linda Association Manager", email: "linda.assoc@example.com" },
+      comments: [makeComment("Hello, my condo association wants to plan something fun for our residents - about 20 people. Do you do this kind of thing?", CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
+  {
+    label: "Christopher's test: high-confidence Standard quote should AUTO-SEND (bypassDraftModeForAutoSend + confidence=high) and tag for follow-up tracking",
+    ctx: {
+      ticket: {
+        id: 21,
+        subject: "Birthday party quote request",
+        description: "I'd like a quote for my daughter's birthday party in Tucson, about 15 people.",
+        status: "new",
+        requester_id: CUSTOMER_ID,
+        // The MockAiDrafter hook above reads this tag to simulate a real,
+        // confident AI quote - see that class for why.
+        tags: ["test_force_high_confidence"],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Priya Birthday Mom", email: "priya@example.com" },
+      comments: [makeComment("I'd like a quote for my daughter's birthday party in Tucson, about 15 people.", CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
 ];
 
 async function main() {
-  const useRealAi = Boolean(process.env.ANTHROPIC_API_KEY);
+  const useRealAi = Boolean(process.env.ANTHROPIC_API_KEY) && process.env.ANTHROPIC_API_KEY !== "mock-key-for-local-testing-only";
   const ai: IAiDrafter = useRealAi
     ? new AiDrafter({ apiKey: process.env.ANTHROPIC_API_KEY!, model: process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-5" })
     : new MockAiDrafter();

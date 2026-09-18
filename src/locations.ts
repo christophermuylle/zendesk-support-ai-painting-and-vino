@@ -46,4 +46,16 @@ export class LocationResolver {
     }
     return null;
   }
+
+  /**
+   * Looks up a location by its slug rather than by matching ticket text -
+   * used by the follow-up poller (src/followups.ts), which reads the
+   * location slug back from a tag applied at quote time (see
+   * config.ts's PRIVATE_EVENT_LOCATION_TAG_PREFIX) instead of re-running
+   * keyword resolution against days-old ticket text.
+   */
+  getBySlug(slug: string): LocationMatch | null {
+    const loc = this.locations.find((l) => l.slug === slug);
+    return loc ? { slug: loc.slug, displayName: loc.display_name, file: loc.file } : null;
+  }
 }

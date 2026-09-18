@@ -27,8 +27,19 @@ a paint-and-sip events company. You must:
   "replyBody": "the reply to send, plain text, no markdown",
   "suggestedAction": "solve" | "pending" | "escalate",
   "confidence": "high" | "medium" | "low",
-  "reasoning": "one or two sentences on why you chose this reply/action"
-}`;
+  "reasoning": "one or two sentences on why you chose this reply/action",
+  "eventCategory": "fundraiser" | "kiddos" | "standard" | "corporate" | null
+}
+5. "eventCategory" is ONLY for a private event quote reply (i.e. you followed
+   the knowledge base's Private events Step 0a/0b/1/2a/2b to draft a real
+   quote): "fundraiser" for the Step 0a template, "kiddos" for the Step 0b
+   Painting & Kiddos template, "standard" for a Step 2a Standard quote, or
+   "corporate" for a Step 2b Corporate/Business quote. Set it to null for
+   every other reply, including a general booking/FAQ redirect that isn't an
+   actual priced quote. This drives an automated follow-up sequence if the
+   customer doesn't respond, so only set it when you actually sent a real
+   quote with real numbers - never for a "let me check on that" or
+   information-gathering reply.`;
 
 export class AiDrafter implements IAiDrafter {
   private client: Anthropic;
@@ -97,6 +108,10 @@ prefer "pending" and explain why in reasoning).`;
     if (!d.replyBody || !d.suggestedAction || !d.confidence || !d.reasoning) {
       throw new Error(`AI response missing required fields: ${JSON.stringify(parsed)}`);
     }
-    return d as DraftResult;
+    // eventCategory is optional/new - older prompts or an odd model response
+    // might omit it entirely, so default to null rather than leaving it
+    // `undefined` (pipeline.ts treats both as "not a quote", but explicit
+    // null is easier to reason about in logs/tags).
+    return { ...d, eventCategory: d.eventCategory ?? null } as DraftResult;
   }
 }

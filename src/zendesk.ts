@@ -25,13 +25,21 @@ export interface IZendeskClient {
   postComment(
     ticketId: number,
     body: string,
-    opts: { isPublic: boolean; status?: ActionType; addTags?: string[]; fields?: Array<{ id: number; value: string | null }> }
+    opts: {
+      isPublic: boolean;
+      status?: ActionType;
+      addTags?: string[];
+      fields?: Array<{ id: number; value: string | null }>;
+      htmlBody?: string;
+    }
   ): Promise<void>;
   /** Update status, tags, and/or custom fields WITHOUT posting a comment (used for out-of-scope tickets and rule-driven field updates like order confirmations). */
   updateTicket(
     ticketId: number,
     opts: { status?: ZendeskStatus; addTags?: string[]; fields?: Array<{ id: number; value: string | null }> }
   ): Promise<void>;
+  /** Used only by the follow-up poller (src/followups.ts) to find candidate tickets. */
+  searchTicketIds(query: string): Promise<number[]>;
 }
 
 export class ZendeskClient implements IZendeskClient {
@@ -61,6 +69,35 @@ export class ZendeskClient implements IZendeskClient {
     }
     if (res.status === 204) return undefined as T;
     return (await res.json()) as T;
+  }
+
+  /**
+   * Find ticket IDs matching a Zendesk Search query, e.g.
+   * `type:ticket status:pending tags:private_event_quote_sent`. Follows
+   * `next_page` to collect every page rather than just the first 100 -
+   * results are expected to be a small queue (private event follow-ups),
+   * but silently dropping tickets past page 1 would be a real bug in an
+   * unattended poller, so this is deliberately not capped.
+   *
+   * Deliberately does NOT try to express "updated more than 24 hours ago"
+   * in the query string - Zendesk Search's date filters (updated<, etc.)
+   * are day-granularity only, not hour-granularity, so they can't express
+   * the 24h/72h/120h windows the follow-up poller needs precisely. Callers
+   * should search broadly (by tag/status only) and do exact hour-math
+   * filtering themselves against each ticket's real updated_at.
+   */
+  async searchTicketIds(query: string): Promise<number[]> {
+    const ids: number[] = [];
+    let path: string | null = `/search.json?query=${encodeURIComponent(query)}&sort_by=updated_at&sort_order=asc`;
+    while (path) {
+      const data: { results: Array<{ id: number }>; next_page: string | null } = await this.request(path);
+      ids.push(...data.results.map((r) => r.id));
+      // next_page is a full URL (including the base) - strip it back down to
+      // a path relative to this.baseUrl so the same authenticated request()
+      // helper can follow it.
+      path = data.next_page ? data.next_page.replace(this.baseUrl, "") : null;
+    }
+    return ids;
   }
 
   async getTicket(ticketId: number): Promise<ZendeskTicket> {
@@ -119,15 +156,30 @@ export class ZendeskClient implements IZendeskClient {
    * Post a comment on a ticket.
    * `isPublic: false` posts an internal note (visible only to agents) - this is what
    * MODE=draft uses so a human can review before anything reaches the customer.
+   *
+   * `htmlBody` (optional): when set, sent as the comment's `html_body`
+   * instead of plain `body` - Zendesk renders this as rich text, so this is
+   * how the follow-up poller (src/followups.ts) turns "[CLICK HERE...]"
+   * style markdown links in Bonnie's email 2/3 templates into actual
+   * clickable hyperlinks, which a plain-text `body` comment can't do. AI
+   * drafts (rules.yaml/ai.ts) never set this - they only ever send plain
+   * `body`, matching the "plain text, no markdown" instruction in ai.ts's
+   * system prompt.
    */
   async postComment(
     ticketId: number,
     body: string,
-    opts: { isPublic: boolean; status?: ActionType; addTags?: string[]; fields?: Array<{ id: number; value: string | null }> }
+    opts: {
+      isPublic: boolean;
+      status?: ActionType;
+      addTags?: string[];
+      fields?: Array<{ id: number; value: string | null }>;
+      htmlBody?: string;
+    }
   ): Promise<void> {
     const statusMap: Record<string, string> = { solve: "solved", pending: "pending", escalate: "open" };
     const ticket: Record<string, unknown> = {
-      comment: { body, public: opts.isPublic },
+      comment: opts.htmlBody ? { html_body: opts.htmlBody, public: opts.isPublic } : { body, public: opts.isPublic },
     };
     if (opts.status && statusMap[opts.status]) {
       ticket.status = statusMap[opts.status];

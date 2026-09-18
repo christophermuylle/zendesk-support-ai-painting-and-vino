@@ -51,6 +51,34 @@ export const LICENSEE_INITIAL_RESPONSE_TEXT =
   process.env.LICENSEE_INITIAL_RESPONSE_TEXT ??
   'Please respond with "RECEIVED" so we know you are receiving our responses.';
 
+// Tag applied by pipeline.ts the moment a private event quote actually
+// auto-sends (event_booking_question, bypassDraftModeForAutoSend, high
+// confidence - see pipeline.ts) - this is the follow-up poller's
+// (src/followups.ts) entry point into its 24h/72h/120h "no response"
+// sequence, per Christopher 2026-09-18. Always paired with a
+// `${PRIVATE_EVENT_QUOTE_SENT_TAG}_<category>` tag (category = fundraiser |
+// kiddos | standard | corporate, from DraftResult.eventCategory) so the
+// poller knows which email 2 variant to send without re-deriving it.
+export const PRIVATE_EVENT_QUOTE_SENT_TAG = "private_event_quote_sent";
+
+// Prefix for a tag recording WHICH location a quoted ticket matched (e.g.
+// "private_event_location_tucson"), applied alongside
+// PRIVATE_EVENT_QUOTE_SENT_TAG. The follow-up poller (src/followups.ts)
+// reads this back for email 3's location-specific calendar link, rather
+// than re-running location resolution against (possibly stale) ticket text
+// days later.
+export const PRIVATE_EVENT_LOCATION_TAG_PREFIX = "private_event_location_";
+
+// Tags the follow-up poller (src/followups.ts) applies as each stage of the
+// sequence fires, so a re-run never double-sends. Also used to detect that
+// the sequence should stop (see followups.ts's isEligibleForFollowUp) -
+// once the customer replies, Zendesk moves the ticket off "pending"
+// automatically, which is the actual stop signal; these tags are purely
+// per-stage idempotency guards.
+export const FOLLOW_UP_1_SENT_TAG = "private_event_followup_1_sent";
+export const FOLLOW_UP_2_SENT_TAG = "private_event_followup_2_sent";
+export const FOLLOW_UP_3_SENT_TAG = "private_event_followup_3_sent";
+
 export const env = {
   zendesk: {
     subdomain: required("ZENDESK_SUBDOMAIN"),

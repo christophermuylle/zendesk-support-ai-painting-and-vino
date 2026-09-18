@@ -12,6 +12,8 @@ import {
   ORDER_CONFIRMATION_FIELD_VALUE,
   LICENSEE_INITIAL_RESPONSE_FIELD_VALUE,
   LICENSEE_INITIAL_RESPONSE_TEXT,
+  PRIVATE_EVENT_QUOTE_SENT_TAG,
+  PRIVATE_EVENT_LOCATION_TAG_PREFIX,
 } from "./config.js";
 import type { DraftResult, RuleDecision, TicketContext } from "./types.js";
 import { extractOrderTotal } from "./util.js";
@@ -54,21 +56,24 @@ export interface PipelineDeps {
  * instead of a generic answer. If no location was identified, the shared
  * doc already instructs the AI to ask rather than guess.
  */
-function buildKnowledgeBase(deps: PipelineDeps, ctx: TicketContext): { text: string; locationDisplayName: string | null } {
+function buildKnowledgeBase(
+  deps: PipelineDeps,
+  ctx: TicketContext
+): { text: string; locationDisplayName: string | null; locationSlug: string | null } {
   const match = deps.locations.resolve(ctx);
   if (!match) {
-    return { text: deps.sharedKnowledgeBase, locationDisplayName: null };
+    return { text: deps.sharedKnowledgeBase, locationDisplayName: null, locationSlug: null };
   }
   const snippet = deps.loadLocationSnippet(match.file);
   if (!snippet) {
     // Location matched but has no file yet (e.g. Adrian/Cadillac MI) - fall
     // back to shared-only rather than erroring the whole ticket.
-    return { text: deps.sharedKnowledgeBase, locationDisplayName: match.displayName };
+    return { text: deps.sharedKnowledgeBase, locationDisplayName: match.displayName, locationSlug: match.slug };
   }
   const text = [deps.sharedKnowledgeBase, "---", `# Matched location: ${match.displayName}`, snippet].join(
     String.fromCharCode(10, 10)
   );
-  return { text, locationDisplayName: match.displayName };
+  return { text, locationDisplayName: match.displayName, locationSlug: match.slug };
 }
 
 export async function processTicket(deps: PipelineDeps, ticketId: number): Promise<PipelineResult> {
@@ -174,12 +179,21 @@ export async function processTicket(deps: PipelineDeps, ticketId: number): Promi
     };
   }
 
-  const { text: knowledgeBase, locationDisplayName } = buildKnowledgeBase(deps, ctx);
+  const { text: knowledgeBase, locationDisplayName, locationSlug } = buildKnowledgeBase(deps, ctx);
   const draft = await deps.ai.draftReply(ctx, knowledgeBase, ruleDecision);
 
   // The rules engine can force human review (e.g. refunds, angry customers)
-  // regardless of MODE. Otherwise MODE=draft always holds for review too.
-  const mustHoldForHuman = ruleDecision.forceHumanReview || deps.mode === "draft";
+  // regardless of MODE - that always wins. Otherwise MODE=draft normally
+  // holds everything for review too, EXCEPT a rule explicitly marked
+  // bypassDraftModeForAutoSend (currently only event_booking_question, per
+  // Christopher 2026-09-18: private event quotes should send automatically
+  // without waiting for a human, so the follow-up sequence below has a real
+  // "quote sent" moment to count from) - and even then, only when the AI's
+  // own confidence is "high". A medium/low-confidence quote still gets held
+  // for review like everything else, since this sends real priced quotes
+  // straight to a customer with no human in the loop.
+  const autoSendEligible = ruleDecision.bypassDraftModeForAutoSend && draft.confidence === "high";
+  const mustHoldForHuman = ruleDecision.forceHumanReview || (deps.mode === "draft" && !autoSendEligible);
 
   let finalAction: PipelineResult["finalAction"] = "no_op";
 
@@ -191,10 +205,24 @@ export async function processTicket(deps: PipelineDeps, ticketId: number): Promi
     });
     finalAction = "posted_internal_note";
   } else {
+    // If this was a private event quote (see ai.ts's eventCategory field),
+    // tag it for the follow-up poller (src/followups.ts) to find later:
+    // one shared "quote sent, no follow-up sent yet" tag plus a
+    // category-specific tag so the poller can pick the right email 2
+    // variant (Corporate vs Standard) without re-deriving it from the
+    // ticket text. The poller adds its own followup_1_sent/2_sent/3_sent
+    // tags as each stage fires - see that file for the full state machine.
+    const followUpTags = draft.eventCategory
+      ? [
+          PRIVATE_EVENT_QUOTE_SENT_TAG,
+          `${PRIVATE_EVENT_QUOTE_SENT_TAG}_${draft.eventCategory}`,
+          ...(locationSlug ? [`${PRIVATE_EVENT_LOCATION_TAG_PREFIX}${locationSlug}`] : []),
+        ]
+      : [];
     await deps.zendesk.postComment(ticketId, draft.replyBody, {
       isPublic: true,
       status: draft.suggestedAction,
-      addTags: ruleDecision.addTags,
+      addTags: [...(ruleDecision.addTags ?? []), ...followUpTags],
     });
     finalAction = "posted_public_reply";
   }
