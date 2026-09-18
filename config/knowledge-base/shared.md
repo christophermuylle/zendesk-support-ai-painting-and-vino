@@ -289,7 +289,7 @@ kids' parties are their own category, same as fundraisers:
 >   guests how to paint their own pet portrait (add $10/person).
 >
 > **💲 Pricing:**
-> - Minimum group size: [MIN] people
+> - Minimum group size: [MIN] people. [BELOW_MIN_LINE]
 > - Per person: $[KIDS_RATE] ($[KIDS_PET_RATE] for Pet Portraits)
 > - Discounts available for larger groups (30+ people)
 > - Travel fee: [TRAVEL_FEE_LINE]
@@ -323,6 +323,8 @@ Fill the placeholders like this:
   own macros to match.
 - `[MIN]`: same fill logic as Step 2a below (10 for Tucson and
   Sacramento; 8 everywhere else).
+- `[BELOW_MIN_LINE]`: same placeholder and fill logic as Step 2a below -
+  don't redefine it here.
 - `[KIDS_RATE]` / `[KIDS_PET_RATE]`: the Kids' events rate for the
   matched location, plus $10/person for Pet Portraits per the Projects
   section above - $35/$45 for most cities, $29/$39 for Kansas City,
@@ -376,7 +378,7 @@ the bracketed placeholders):
 > - 30-49 guests: $[STANDARD_2]/person
 > - 50+ guests: $[STANDARD_3]/person
 >
-> Minimum [MIN] guests. [TRAVEL_FEE_LINE]
+> Minimum [MIN] guests. [BELOW_MIN_LINE] [TRAVEL_FEE_LINE]
 >
 > Deposit: We require a deposit equal to 2 seats or 20% of your expected
 > headcount (whichever is higher). The balance is due the day before. The
@@ -409,6 +411,12 @@ Fill the placeholders like this:
 - `[MIN]`: that location's minimum group size (10 for Tucson and
   Sacramento; 8 everywhere else, including San Francisco, per that
   location's Private events section).
+- `[BELOW_MIN_LINE]`: "If your group is smaller than that, we can still
+  host your event — we'd just need payment to cover the [MIN]-guest
+  minimum." (per Christopher, 2026-09-18 - a group under the minimum
+  isn't turned away, they're quoted for the minimum headcount's worth
+  even though fewer people attend). Fill `[MIN]` in this sentence with
+  the same number used just above it.
 - `[TRAVEL_FEE_LINE]`: "A travel fee may apply for locations outside city
   limits." - unless the matched location's own file states a specific
   confirmed figure (e.g. San Francisco Bay Area's $75+ for 30+ minutes
@@ -447,7 +455,10 @@ using the Corporate/Business pricing column:
    headcount they started with, so showing all three tiers lets the
    customer see how the price moves either way. State the location's
    minimum group size (see that location's Private events section; 8 is
-   the fallback if the location file doesn't say otherwise).
+   the fallback if the location file doesn't say otherwise), and if the
+   customer's stated guest count is under that minimum, use the same
+   `[BELOW_MIN_LINE]` wording and fill logic as Step 2a above - they can
+   still be hosted, just with payment covering the minimum headcount.
 3. State the deposit policy (below).
 4. Offer a venue if they need one, using the same `[VENUE_PARAGRAPH]`
    wording and fill logic as Step 2a above (partner restaurants, and
@@ -511,7 +522,10 @@ Step 0b above).
 
 **Minimum group size:** 8 people for most cities; **10 people** for
 Tucson and Sacramento. San Francisco moved to the standard 8-person
-minimum on 2026-09-15 (per Jessica).
+minimum on 2026-09-15 (per Jessica). A group under the minimum isn't
+turned away - we can still host the event, but payment needs to cover
+the minimum headcount (per Christopher, 2026-09-18; see `[BELOW_MIN_LINE]`
+in Step 2a above for the exact customer-facing wording).
 
 **Deposit:** the greater of 2 seats' worth or 20% of the expected
 headcount. Non-refundable, but transferable to a future date for up to
