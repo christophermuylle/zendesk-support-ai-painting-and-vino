@@ -611,6 +611,40 @@ Instagram`,
       brand: "painting_and_vino",
     },
   },
+  {
+    // Regression test for the bug Bonnie reported 2026-09-22 (ticket #29199):
+    // "the same email is sending out over and over." Root cause: the
+    // webhook re-runs processTicket on EVERY ticket update, and
+    // event_booking_question's broad keyword list can still match the
+    // customer's own reply after a quote already went out (people keep
+    // saying "party"/"event" while confirming details) - with no guard,
+    // pipeline.ts re-sent the identical quote email each time. This
+    // scenario simulates exactly that: a ticket already tagged
+    // private_event_quote_sent (quote already sent + tagged, matching what
+    // the real pipeline does), where the customer's LATEST message still
+    // contains a matching keyword ("party"). Expected: no second quote -
+    // falls back to an internal note for a human instead.
+    label: "REGRESSION (ticket #29199): customer reply after quote already sent should NOT re-send the quote",
+    ctx: {
+      ticket: {
+        id: 29199,
+        subject: "Re: Party request from Rachael Nesbit",
+        description: "Party request from Rachael Nesbit. Guests: about 20. Preferred date: flexible.",
+        status: "pending",
+        requester_id: CUSTOMER_ID,
+        tags: ["booking_question", "private_event_quote_sent", "private_event_quote_sent_standard", "private_event_location_tucson"],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Rachael Nesbit", email: "rachael@example.com" },
+      comments: [
+        makeComment("Party request from Rachael Nesbit. Guests: about 20. Preferred date: flexible.", CUSTOMER_ID),
+        makeComment("[Bonnie's original private event quote already sent here]", 999), // the agent's own quote reply - the anchor a real ticket would have
+        makeComment("Thanks so much! Quick question about our party - can we bring our own cake?", CUSTOMER_ID), // the reply that should NOT re-trigger a quote
+      ],
+      brand: "painting_and_vino",
+    },
+  },
 ];
 
 async function main() {
@@ -622,6 +656,7 @@ async function main() {
   console.log(`Running ${scenarios.length} mock tickets through the pipeline (AI: ${useRealAi ? "real Claude API" : "mock, offline"})` + String.fromCharCode(10));
   console.log("Loaded rules:", (yaml.load(fs.readFileSync(path.join(CONFIG_DIR, "rules.yaml"), "utf-8")) as { rules: { name: string }[] }).rules.map((r) => r.name).join(", "));
 
+  const resultsByLabel = new Map<string, Awaited<ReturnType<typeof processTicket>>>();
   for (const scenario of scenarios) {
     console.log(String.fromCharCode(10) + `=== ${scenario.label} ===`);
     const zendesk = new MockZendeskClient(scenario.ctx);
@@ -629,6 +664,7 @@ async function main() {
       { zendesk, rules, locations, ai, sharedKnowledgeBase, loadLocationSnippet, mode: "draft" },
       scenario.ctx.ticket.id
     );
+    resultsByLabel.set(scenario.label, result);
     console.log(`  matched rule: ${result.ruleDecision.matchedRule}`);
     console.log(`  matched location: ${result.matchedLocation ?? "(none)"}`);
     if (result.draft) {
@@ -638,6 +674,18 @@ async function main() {
     }
     console.log(`  final: ${result.finalAction}`);
   }
+
+  // --- Regression check for ticket #29199 (see the scenario above) ---
+  const regressionLabel = "REGRESSION (ticket #29199): customer reply after quote already sent should NOT re-send the quote";
+  const regressionResult = resultsByLabel.get(regressionLabel);
+  if (!regressionResult) throw new Error(`ASSERTION FAILED: regression scenario "${regressionLabel}" did not run`);
+  if (regressionResult.finalAction !== "posted_internal_note") {
+    throw new Error(
+      `ASSERTION FAILED: ticket #29199 regression - expected finalAction "posted_internal_note" (no re-send), got "${regressionResult.finalAction}". ` +
+        `This means a customer reply after the quote was already sent would trigger ANOTHER copy of the quote email - the exact bug Bonnie reported.`
+    );
+  }
+  console.log(String.fromCharCode(10) + "Regression check passed: reply-after-quote does not re-send the quote email.");
 }
 
 main().catch((err) => {
