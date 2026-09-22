@@ -17,16 +17,19 @@ import {
 } from "./config.js";
 import type { DraftResult, RuleDecision, TicketContext } from "./types.js";
 import { extractOrderTotal, getLatestComment, looksLikeReceivedConfirmation } from "./util.js";
+import { classifyPrivateEvent, renderPrivateEventQuote, resolvePrivateEventLocationKey } from "./private-event-quotes.js";
 
 export interface PipelineResult {
   ticketId: number;
   ruleDecision: RuleDecision;
   matchedLocation: string | null;
   // Absent when the rules engine short-circuited to "no_action",
-  // "order_confirmation", or "licensee_initial_response" (e.g. an
-  // out-of-scope-location ticket, an automated new-order notification, or
-  // an automated licensee-application notification) - the AI is never
-  // called for those, so there's nothing to draft and no cost incurred.
+  // "order_confirmation", "licensee_initial_response", or
+  // "private_event_quote" (e.g. an out-of-scope-location ticket, an
+  // automated new-order notification, an automated licensee-application
+  // notification, or a mechanically-quoted private event) - the AI is
+  // never called for those, so there's nothing to draft and no cost
+  // incurred.
   draft?: DraftResult;
   finalAction:
     | "posted_public_reply"
@@ -37,6 +40,7 @@ export interface PipelineResult {
     | "licensee_initial_response_sent"
     | "licensee_initial_response_already_sent"
     | "licensee_received_confirmed_resolved"
+    | "private_event_needs_location"
     | "no_op";
   mode: Mode;
 }
@@ -214,6 +218,72 @@ export async function processTicket(deps: PipelineDeps, ticketId: number): Promi
       ruleDecision,
       matchedLocation: null,
       finalAction: "licensee_initial_response_sent",
+      mode: deps.mode,
+    };
+  }
+
+  // "private_event_quote" is a purely mechanical rule (config/rules.yaml's
+  // event_booking_question) for private-event pricing inquiries - no AI
+  // call. Christopher, 2026-09-22: "I don't want AI draft pending review.
+  // We want you to answer the quotes automatically with templates I
+  // already provided. Then do the follow up emails as trained." Replaces
+  // the AI-drafted-with-confidence-gate approach this rule used from
+  // 2026-09-18 (see git history) - that gate was a real reliability gap
+  // (see ticket #81174: a quote could silently fall back to an unreviewed
+  // internal note whenever the AI wasn't "highly confident"). Classifies
+  // the inquiry (corporate/standard/kiddos/fundraiser) and location purely
+  // by keyword (src/private-event-quotes.ts), and ALWAYS auto-sends - no
+  // human review hold, unlike every other category on this brand. Tags the
+  // ticket so the follow-up poller (src/followups.ts) picks it up for the
+  // 24h/72h/120h no-response sequence - same tag scheme the old AI-drafted
+  // path already used, so followups.ts needed no changes.
+  if (ruleDecision.action === "private_event_quote") {
+    const location = deps.locations.resolve(ctx);
+    const locationKey = location ? resolvePrivateEventLocationKey(location.slug) : null;
+
+    if (!location || !locationKey) {
+      // No location, or a location without private-event pricing on file
+      // yet - fails safe to a human rather than guessing pricing or a
+      // venue link.
+      const note = [
+        `[PRIVATE EVENT QUOTE - needs human]`,
+        `Matched rule: ${ruleDecision.matchedRule}`,
+        location
+          ? `Location matched (${location.displayName}) but this brand's private-event pricing isn't set up for it yet - please confirm the location and send a quote by hand.`
+          : `No specific location could be identified from the ticket text - please confirm the location and send a quote by hand.`,
+      ].join(String.fromCharCode(10));
+      await deps.zendesk.postComment(ticketId, note, {
+        isPublic: false,
+        addTags: [...(ruleDecision.addTags ?? []), "private_event_needs_location"],
+      });
+      return {
+        ticketId,
+        ruleDecision,
+        matchedLocation: location?.displayName ?? null,
+        finalAction: "private_event_needs_location",
+        mode: deps.mode,
+      };
+    }
+
+    const category = classifyPrivateEvent(ctx);
+    const quote = renderPrivateEventQuote(ctx, category, locationKey);
+
+    await deps.zendesk.postComment(ticketId, quote.plainBody, {
+      isPublic: true,
+      status: "pending", // waiting on the customer, not "solved" - lets the follow-up sequence pick it up
+      htmlBody: quote.htmlBody,
+      addTags: [
+        ...(ruleDecision.addTags ?? []),
+        PRIVATE_EVENT_QUOTE_SENT_TAG,
+        `${PRIVATE_EVENT_QUOTE_SENT_TAG}_${category}`,
+        `${PRIVATE_EVENT_LOCATION_TAG_PREFIX}${locationKey}`,
+      ],
+    });
+    return {
+      ticketId,
+      ruleDecision,
+      matchedLocation: location.displayName,
+      finalAction: "posted_public_reply",
       mode: deps.mode,
     };
   }

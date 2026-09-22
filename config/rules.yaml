@@ -12,7 +12,7 @@
 #   tags             - fires if the ticket already has any of these Zendesk tags
 #
 # action: solve | pending | escalate | no_action | order_confirmation |
-#         licensee_initial_response
+#         licensee_initial_response | private_event_quote
 #   solve               - AI answers the question and the ticket is marked Solved
 #   pending             - AI replies (usually asking for info) and ticket goes to
 #                         Pending, i.e. "waiting on the customer"
@@ -41,10 +41,27 @@
 #                         ticket - in both draft and auto mode, since it's a
 #                         fixed template, not an AI judgment call. See
 #                         src/pipeline.ts's licensee_initial_response branch.
+#   private_event_quote - for private-event pricing inquiries: no AI call.
+#                         src/private-event-quotes.ts classifies the inquiry
+#                         (corporate/standard/kiddos/fundraiser) and location
+#                         purely by keyword and renders a literal quote,
+#                         which ALWAYS auto-sends (no human-review hold,
+#                         unlike every other category on this brand) with
+#                         status set to Pending, tagged for the automated
+#                         24h/72h/120h follow-up sequence (src/followups.ts).
+#                         If no location can be confidently resolved, falls
+#                         back to an internal note for a human instead of
+#                         guessing. See src/pipeline.ts's private_event_quote
+#                         branch. Changed from "pending" + AI drafting (with
+#                         a confidence gate) to this fully mechanical action
+#                         2026-09-22 per Christopher - see that rule's own
+#                         comment below for the full history.
 #
 # force_human_review: true means this rule NEVER auto-sends, regardless of MODE.
 # add_tags: tags to stamp on the ticket when this rule fires (for reporting).
-# drafting_hint: extra instruction passed to the AI when it writes the reply.
+# drafting_hint: extra instruction passed to the AI when it writes the reply
+#                (unused for private_event_quote - that action is fully
+#                mechanical, no AI call at all).
 #
 # Matching runs against the ticket SUBJECT plus the latest customer message,
 # so a location that only shows up in the subject line (e.g. from a
@@ -57,7 +74,11 @@
 # though several of these rules used to draft (see git history). This was
 # the original intent from day one; it had drifted as more rule categories
 # got added. Do not add solve/pending/escalate actions outside those two
-# categories without Christopher explicitly asking again.
+# categories without Christopher explicitly asking again. (Private Event
+# inquiries themselves moved off the AI entirely on 2026-09-22 - see
+# private_event_quote above - so in practice the AI is no longer called for
+# ANY rule in this file today; the AiDrafter wiring is left in place rather
+# than ripped out, in case a future rule needs it again.)
 # ---------------------------------------------------------------------------
 
 rules:
@@ -190,65 +211,28 @@ rules:
       # behalf is just as likely to say "our residents" as "my
       # residents".
       any_keywords: ["book an event", "book a class", "private event", "private party", "date availability", "how do i book", "party request", "guests:", "preferred date", "fundraiser", "fundraising", "kid's birthday", "children's birthday", "kids party", "painting & kiddos", "team building", "corporate event", "party of", "birthday party", "birthday", "bachelorette", "bachelor party", "anniversary", "celebration", "painting event", "paint night", "for my apartment", "apartment complex", "my condo association", "condo association", "my hoa", "our hoa", "my community", "our community", "my residents", "our residents"]
-    action: pending
-    # force_human_review flipped false + bypass_draft_mode_for_auto_send
-    # added 2026-09-18 per Christopher: private event quotes should send
-    # automatically, not wait for a human to review/send them (unlike every
-    # other category on this brand, which is unaffected and still held for
-    # review as before - see pipeline.ts's mustHoldForHuman for the exact
-    # mechanism, including the "still holds if the AI's own confidence isn't
-    # high" safety gate). This is also what gives the automated 24h/72h/120h
-    # no-response follow-up sequence (src/followups.ts) a real "the quote
-    # actually went out" moment to start its clock from.
+    action: private_event_quote
+    # Changed from "pending" + bypass_draft_mode_for_auto_send (AI-drafted,
+    # gated on the AI's own "high" confidence) to this fully mechanical
+    # action on 2026-09-22 per Christopher: "I don't want AI draft pending
+    # review. We want you to answer the quotes automatically with templates
+    # I already provided. Then do the follow up emails as trained." The
+    # confidence gate was a real reliability gap - a quote could silently
+    # fall back to an internal note nobody reviewed whenever the AI wasn't
+    # "highly confident" (see ticket #81174), which defeated the whole
+    # point of auto-sending. src/private-event-quotes.ts classifies the
+    # inquiry (corporate/standard/kiddos/fundraiser) and location purely by
+    # keyword and renders a literal quote - no AI call, so no confidence to
+    # be low about, and it ALWAYS auto-sends (no human-review hold, unlike
+    # every other category on this brand) with status set to Pending,
+    # tagged for the automated 24h/72h/120h follow-up sequence
+    # (src/followups.ts, unchanged by this switch - it already reads the
+    # same PRIVATE_EVENT_QUOTE_SENT_TAG/PRIVATE_EVENT_LOCATION_TAG_PREFIX
+    # tags either way). If no location can be confidently resolved, falls
+    # back to an internal note for a human instead of guessing. See
+    # src/pipeline.ts's private_event_quote branch.
     force_human_review: false
-    bypass_draft_mode_for_auto_send: true
     add_tags: ["booking_question"]
-    drafting_hint: >
-      First check the shared knowledge base's Private events Step 0a: if
-      this is a request to plan a fundraiser/charity/benefit painting
-      party (mentions "fundraiser", "fundraising", "charity", "benefit",
-      "nonprofit", "donate"/"donation", or "cause"), use that section's
-      literal Fundraiser quote template verbatim, filling in only the
-      bracketed placeholders - do not paraphrase or restructure it, and
-      skip everything below (Standard vs Corporate doesn't apply to
-      fundraisers). Otherwise check Step 0b: if this is specifically a
-      kids' birthday/party request (the requester states a child's age
-      of 16 or under, or wording like "kid's birthday", "child's
-      birthday", "son's/daughter's birthday", "kids party", "Painting &
-      Kiddos"), use that section's literal Painting & Kiddos quote
-      template verbatim, filling in only the bracketed placeholders
-      (reusing the same [VENUE_PARAGRAPH]/[MIN]/[TRAVEL_FEE_LINE] fill
-      logic as the Standard template below) - also skip everything below
-      for these. Otherwise, if this is a private/corporate event
-      pricing inquiry (a "Private Event Request"-style submission - guest
-      count, event date, company name, "team building"/"corporate"/
-      "celebration" language), draft a full quote reply following the
-      shared knowledge base's Private events section - this maps to one
-      of two real Zendesk macros ("Private Event Inquiry -
-      Corporate/Business Quote" vs "... Standard Quote"), picked using
-      the form's Company Name field plus message wording (see that
-      section for the exact classification rule). For a STANDARD
-      (non-corporate) inquiry, use the shared
-      knowledge base's literal "Standard quote template" VERBATIM,
-      filling in only the bracketed placeholders - do not paraphrase or
-      restructure it. For a CORPORATE/business inquiry, build the reply
-      from the shared knowledge base's corporate quote structure and
-      pricing column instead (we don't have Bonnie's literal corporate
-      macro text on file yet; ticket #81048, a Tucson corporate
-      team-building quote, is the reference shape). Quote the correct
-      per-person price for their exact guest count and event type, state
-      the minimum and deposit, include the "see what a party looks like"
-      link, and offer that location's venue link(s) if on file (or the
-      fallback line if not), signed off as "Bonnie Davila, Private Event
-      Coordinator, Painting & Vino". This always stays an internal draft
-      for Bonnie to review and send - never auto-sent. For a general
-      public booking/date-availability question that ISN'T a private
-      event quote, just point them to the booking page for their city
-      and ask which date/venue they're interested in if not already
-      stated. If a location was matched, include that location's direct
-      event calendar link (see the "Direct link" line in the matched
-      location's Booking section) rather than just saying "check our
-      website."
 
   - name: event_sign_up_question
     match:

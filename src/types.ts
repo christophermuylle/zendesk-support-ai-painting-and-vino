@@ -35,7 +35,7 @@ export interface TicketContext {
   brand: string;
 }
 
-export type ActionType = "solve" | "pending" | "escalate" | "no_action" | "order_confirmation" | "licensee_initial_response";
+export type ActionType = "solve" | "pending" | "escalate" | "no_action" | "order_confirmation" | "licensee_initial_response" | "private_event_quote";
 
 /** Outcome of running the rules engine against a ticket. */
 export interface RuleDecision {
@@ -61,6 +61,14 @@ export interface RuleDecision {
   /** Extra instruction to hand the AI when drafting the reply (e.g. "ask for the event date"). */
   draftingHint?: string;
 }
+
+// PrivateEventCategory below is now ALSO the category type
+// src/private-event-quotes.ts's deterministic classifier returns (see its
+// header comment) - the AI-drafted eventCategory/DraftResult usage this
+// type originally existed for (event_booking_question, pre-2026-09-22) no
+// longer applies to that rule, but the type stays here since
+// followups.ts/followup-templates.ts already key off it and nothing else
+// currently needs a second definition.
 
 /**
  * Which private-event quote category the AI drafted, if any - used only by

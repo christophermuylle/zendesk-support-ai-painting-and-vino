@@ -571,7 +571,7 @@ Instagram`,
     },
   },
   {
-    label: "Christopher's test: high-confidence Standard quote should AUTO-SEND (bypassDraftModeForAutoSend + confidence=high) and tag for follow-up tracking",
+    label: "Christopher's test: 'my daughter's birthday party' (no explicit 'kids'/'children's' wording) should still classify Kiddos and AUTO-SEND, tagged for follow-up tracking",
     ctx: {
       ticket: {
         id: 21,
@@ -579,14 +579,35 @@ Instagram`,
         description: "I'd like a quote for my daughter's birthday party in Tucson, about 15 people.",
         status: "new",
         requester_id: CUSTOMER_ID,
-        // The MockAiDrafter hook above reads this tag to simulate a real,
-        // confident AI quote - see that class for why.
-        tags: ["test_force_high_confidence"],
+        tags: [],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
       requester: { id: CUSTOMER_ID, name: "Priya Birthday Mom", email: "priya@example.com" },
       comments: [makeComment("I'd like a quote for my daughter's birthday party in Tucson, about 15 people.", CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
+  {
+    label: "PRIVATE EVENT QUOTE - Kansas City kids party (should auto-send Kiddos quote at KC's own lower price point, not the default $35)",
+    ctx: {
+      ticket: {
+        id: 22,
+        subject: "New message from Kansas City, MO Contact Form",
+        description: "Party request from Dana Parent. My son is turning 7 and we want to book a kids party in Kansas City. Guests: about 12 kids.",
+        status: "new",
+        requester_id: CUSTOMER_ID,
+        tags: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Dana Parent", email: "dana@example.com" },
+      comments: [
+        makeComment(
+          "Party request from Dana Parent. My son is turning 7 and we want to book a kids party in Kansas City. Guests: about 12 kids.",
+          CUSTOMER_ID
+        ),
+      ],
       brand: "painting_and_vino",
     },
   },
