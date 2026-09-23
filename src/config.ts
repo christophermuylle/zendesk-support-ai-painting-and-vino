@@ -61,6 +61,21 @@ export const LICENSEE_INITIAL_RESPONSE_TEXT =
 // poller knows which email 2 variant to send without re-deriving it.
 export const PRIVATE_EVENT_QUOTE_SENT_TAG = "private_event_quote_sent";
 
+// Guards the "private_event_quote" pipeline branch against auto-quoting a
+// message that only LOOKS like a private-event inquiry because it came
+// from one of Painting and Vino's own internal/staff mailboxes, not a
+// real customer. Confirmed on ticket #81236 (Morgan Palla, Event
+// Coordinator/Artist OC & LA, requester paintingandvino.noc@gmail.com)
+// proactively following up with a past customer on a closed ticket - the
+// requester on that new ticket is Morgan herself, not the customer she
+// was writing to, so her own outreach message was read as the "latest
+// customer message" and auto-quoted. She emails FROM an address that is
+// itself named after the brand ("paintingandvino.noc@gmail.com") rather
+// than a personal address - see isInternalBrandSender in src/util.ts. A
+// real customer's email is essentially never going to start with the
+// company's own name.
+export const PRIVATE_EVENT_INTERNAL_SENDER_PREFIX = "paintingandvino";
+
 // Prefix for a tag recording WHICH location a quoted ticket matched (e.g.
 // "private_event_location_tucson"), applied alongside
 // PRIVATE_EVENT_QUOTE_SENT_TAG. The follow-up poller (src/followups.ts)

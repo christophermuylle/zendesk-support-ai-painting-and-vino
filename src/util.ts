@@ -60,3 +60,19 @@ export function looksLikeReceivedConfirmation(body: string): boolean {
     .replace(/[.!,;:]/g, "");
   return cleaned.includes("received") && cleaned.length <= 40;
 }
+
+/**
+ * True when an email address looks like one of the brand's own internal
+ * or staff mailboxes (e.g. "paintingandvino.noc@gmail.com") rather than a
+ * real customer's personal address - i.e. the local part (before the @)
+ * starts with the brand's own name. Used to keep the "private_event_quote"
+ * pipeline branch from auto-quoting a staff member's own outreach/internal
+ * chatter just because it happens to use private-event vocabulary - see
+ * PRIVATE_EVENT_INTERNAL_SENDER_PREFIX in src/config.ts for the real
+ * ticket this was confirmed against.
+ */
+export function isInternalBrandSender(email: string | null | undefined, brandLocalPartPrefix: string): boolean {
+  if (!email || !brandLocalPartPrefix) return false;
+  const localPart = email.trim().toLowerCase().split("@")[0];
+  return localPart.startsWith(brandLocalPartPrefix.toLowerCase());
+}

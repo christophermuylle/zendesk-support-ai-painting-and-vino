@@ -645,6 +645,43 @@ Instagram`,
       brand: "painting_and_vino",
     },
   },
+  {
+    // REGRESSION (ticket #81236): Morgan Palla, an Event Coordinator/
+    // Artist (OC & LA), proactively followed up with a past customer
+    // (Nubia Ingham, ticket #74553) about booking a holiday private event.
+    // Because that follow-up was sent "via closed ticket," Zendesk set the
+    // REQUESTER on the new ticket to Morgan herself (requester email
+    // paintingandvino.noc@gmail.com), not to Nubia - so her own outreach
+    // message was read as the "latest customer message" and got the full
+    // auto-quote + auto-send treatment, plus a wrongful 24h follow-up nag,
+    // as if a real customer had just asked for pricing. Expected: the
+    // rule still matches event_booking_question (the message legitimately
+    // contains private-event language), but the internal-sender guard in
+    // pipeline.ts stops it from actually sending - posts an internal note
+    // for a human instead.
+    label: "REGRESSION (ticket #81236): staff follow-up to a past customer should NOT be auto-quoted",
+    ctx: {
+      ticket: {
+        id: 81236,
+        subject: "Private paint and sip event",
+        description:
+          "Hi, I hope you've been doing well! I wanted to check in and see if you're thinking about hosting a private Paint & Sip event for the holidays this year. Whether it's a company holiday party, team celebration, or just a get-together with friends and family, we can customize the painting and event to fit your group.",
+        status: "solved",
+        requester_id: 6001,
+        tags: ["booking_question", "private_event_inquiry"],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      requester: { id: 6001, name: "Morgan Palla", email: "paintingandvino.noc@gmail.com" },
+      comments: [
+        makeComment(
+          "Hi, I hope you've been doing well! I wanted to check in and see if you're thinking about hosting a private Paint & Sip event for the holidays this year. Whether it's a company holiday party, team celebration, or just a get-together with friends and family, we can customize the painting and event to fit your group.",
+          6001
+        ),
+      ],
+      brand: "painting_and_vino",
+    },
+  },
 ];
 
 async function main() {
@@ -686,6 +723,29 @@ async function main() {
     );
   }
   console.log(String.fromCharCode(10) + "Regression check passed: reply-after-quote does not re-send the quote email.");
+
+  // --- Regression check for ticket #81236 (see the scenario above) ---
+  const staffLabel = "REGRESSION (ticket #81236): staff follow-up to a past customer should NOT be auto-quoted";
+  const staffResult = resultsByLabel.get(staffLabel);
+  if (!staffResult) throw new Error(`ASSERTION FAILED: regression scenario "${staffLabel}" did not run`);
+  if (staffResult.ruleDecision.matchedRule !== "event_booking_question") {
+    throw new Error(
+      `ASSERTION FAILED: ticket #81236 regression - expected matched rule "event_booking_question", got "${staffResult.ruleDecision.matchedRule}". ` +
+        `The scenario is supposed to exercise the internal-sender guard specifically, so the rule should still match normally.`
+    );
+  }
+  if (staffResult.finalAction === "posted_public_reply") {
+    throw new Error(
+      `ASSERTION FAILED: ticket #81236 regression - expected the auto-quote to be BLOCKED (finalAction other than "posted_public_reply"), got "${staffResult.finalAction}". ` +
+        `This means Morgan Palla's own follow-up to a past customer would get auto-quoted and auto-sent again, exactly like the real ticket.`
+    );
+  }
+  if (staffResult.finalAction !== "posted_internal_note") {
+    throw new Error(
+      `ASSERTION FAILED: ticket #81236 regression - expected finalAction "posted_internal_note" (internal-sender guard), got "${staffResult.finalAction}".`
+    );
+  }
+  console.log("Regression check passed: a staff member's own follow-up to a past customer is no longer auto-quoted.");
 }
 
 main().catch((err) => {
