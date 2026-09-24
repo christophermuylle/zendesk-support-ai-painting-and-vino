@@ -12,6 +12,7 @@
 #   tags             - fires if the ticket already has any of these Zendesk tags
 #
 # action: solve | pending | escalate | no_action | order_confirmation |
+#         paypal_receipt |
 #         licensee_initial_response | private_event_quote
 #   solve               - AI answers the question and the ticket is marked Solved
 #   pending             - AI replies (usually asking for info) and ticket goes to
@@ -100,6 +101,29 @@ rules:
     match:
       any_keywords: ["new order"]
     action: order_confirmation
+    force_human_review: false
+
+  # PayPal's own "Notification of payment received" emails - payments go to
+  # info@paintingandvino.com, so PayPal's receipts land in the support
+  # inbox as tickets. Nobody is writing in; there is nothing to answer.
+  #
+  # Christopher, 2026-09-24: "Notification of payment received - these type
+  # of tickets are closed like orders but the reason for contact is PayPal
+  # Receipt. I closed this one for a sample." Sample ticket: #81322.
+  #
+  # Matched on the exact subject PayPal uses. Sits up here with the other
+  # mechanical rules because it must beat general_faq: a PayPal receipt
+  # body contains "Unit price", which trips that rule's "price" keyword, so
+  # 100 of these were landing tagged faq_auto_answered - most got filed by
+  # hand afterwards, and #81317 and #81320 were still sitting Open when
+  # this was written.
+  #
+  # Painting and Vino only - Wine and Canvas has never received one of
+  # these (checked 2026-09-24: 0 tickets with this subject).
+  - name: paypal_receipt_notification
+    match:
+      any_keywords: ["notification of payment received"]
+    action: paypal_receipt
     force_human_review: false
 
   # Automated "New submission from Licensee Application" notification

@@ -10,6 +10,7 @@ import type { Mode } from "./config.js";
 import {
   ORDER_CONFIRMATION_FIELD_ID,
   ORDER_CONFIRMATION_FIELD_VALUE,
+  PAYPAL_RECEIPT_FIELD_VALUE,
   LICENSEE_INITIAL_RESPONSE_FIELD_VALUE,
   LICENSEE_INITIAL_RESPONSE_TEXT,
   PRIVATE_EVENT_QUOTE_SENT_TAG,
@@ -37,6 +38,7 @@ export interface PipelineResult {
     | "posted_internal_note"
     | "skipped_out_of_scope"
     | "order_confirmation_solved"
+    | "paypal_receipt_solved_and_closed"
     | "order_confirmation_left_open"
     | "licensee_initial_response_sent"
     | "licensee_initial_response_already_sent"
@@ -127,6 +129,39 @@ export async function processTicket(deps: PipelineDeps, ticketId: number): Promi
       ruleDecision,
       matchedLocation: null,
       finalAction: status === "solved" ? "order_confirmation_solved" : "order_confirmation_left_open",
+      mode: deps.mode,
+    };
+  }
+
+  // "paypal_receipt" - PayPal's own "Notification of payment received"
+  // emails, which land in the support inbox because payments go to
+  // info@paintingandvino.com. Not a customer question at all: nobody is
+  // writing in, PayPal is. No AI call and no reply of any kind, draft or
+  // auto mode alike.
+  //
+  // Christopher, 2026-09-24: "Notification of payment received - these
+  // type of tickets are closed like orders but the reason for contact is
+  // PayPal Receipt. I closed this one for a sample." The sample is ticket
+  // #81322. Solved and Closed are applied as two sequential updates so the
+  // ticket passes through Solved on the way to Closed, matching Zendesk's
+  // normal status flow (verified working over the API on Wine and Canvas's
+  // newsletter tickets, e.g. #29280: solved(api) -> closed(api)).
+  //
+  // Before this rule existed these fell through to general_faq - the
+  // PayPal receipt body contains "Unit price", which hits that rule's
+  // "price" keyword - and sat Open tagged faq_auto_answered.
+  if (ruleDecision.action === "paypal_receipt") {
+    await deps.zendesk.updateTicket(ticketId, {
+      status: "solved",
+      addTags: ruleDecision.addTags,
+      fields: [{ id: ORDER_CONFIRMATION_FIELD_ID, value: PAYPAL_RECEIPT_FIELD_VALUE }],
+    });
+    await deps.zendesk.updateTicket(ticketId, { status: "closed" });
+    return {
+      ticketId,
+      ruleDecision,
+      matchedLocation: null,
+      finalAction: "paypal_receipt_solved_and_closed",
       mode: deps.mode,
     };
   }

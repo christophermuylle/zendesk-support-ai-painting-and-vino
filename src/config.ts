@@ -37,6 +37,12 @@ export type Mode = "draft" | "auto";
 export const ORDER_CONFIRMATION_FIELD_ID = Number(process.env.ORDER_CONFIRMATION_FIELD_ID ?? 114096070134);
 export const ORDER_CONFIRMATION_FIELD_VALUE = process.env.ORDER_CONFIRMATION_FIELD_VALUE ?? "order_confirmation";
 
+// "Reason for Customer Contacting Us" option for PayPal's own "Notification
+// of payment received" emails (Christopher, 2026-09-24). Confirmed against
+// the live field and against ticket #81322, which he filed by hand as a
+// sample: option "PayPal Receipt", value "paypal_receipt".
+export const PAYPAL_RECEIPT_FIELD_VALUE = process.env.PAYPAL_RECEIPT_FIELD_VALUE ?? "paypal_receipt";
+
 // Same "Reason for Customer Contacting Us" tagger field (114096070134) used
 // by the "licensee_initial_response" rule action (see src/pipeline.ts), just
 // a different option value - matches Zendesk's own "Licensee Initial

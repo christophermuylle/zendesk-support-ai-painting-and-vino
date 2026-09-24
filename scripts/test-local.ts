@@ -682,6 +682,29 @@ Instagram`,
       brand: "painting_and_vino",
     },
   },
+  {
+    // Real shape of ticket #81322, the sample Christopher filed by hand
+    // 2026-09-24. Note the body contains "Unit price" - that "price" is
+    // what used to drag these into general_faq, leaving 100 PayPal
+    // receipts tagged faq_auto_answered instead of filed. Expected:
+    // Reason = PayPal Receipt, solved and closed, no reply of any kind.
+    label: "PayPal 'Notification of payment received' should be filed as PayPal Receipt, solved and closed",
+    ctx: {
+      ticket: {
+        id: 81322,
+        subject: "Notification of payment received",
+        description: "Muylle Investments LLC, here are the details.\n\nHello, Muylle Investments LLC\n\nYou received a payment of $45.00 USD from masha polan (masha@example.com)\n\nThanks for using PayPal. To see all the transaction details, log in to your PayPal account.\n\nTransaction ID 68747260FK574532M\nTransaction date Sep 24, 2026\n\nInvoice ID PNV-218843\n\nDescription Unit price Qty Amount\nGhostly Woods - General Admission $45.00 USD 1 $45.00 USD\n\nSubtotal $45.00 USD\nTotal $45.00 USD\nPayment sent to info@paintingandvino.com",
+        status: "new",
+        requester_id: CUSTOMER_ID,
+        tags: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "masha polan", email: "masha@example.com" },
+      comments: [makeComment("Muylle Investments LLC, here are the details.\n\nHello, Muylle Investments LLC\n\nYou received a payment of $45.00 USD from masha polan (masha@example.com)\n\nThanks for using PayPal. To see all the transaction details, log in to your PayPal account.\n\nTransaction ID 68747260FK574532M\nTransaction date Sep 24, 2026\n\nInvoice ID PNV-218843\n\nDescription Unit price Qty Amount\nGhostly Woods - General Admission $45.00 USD 1 $45.00 USD\n\nSubtotal $45.00 USD\nTotal $45.00 USD\nPayment sent to info@paintingandvino.com", CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
 ];
 
 async function main() {
@@ -745,6 +768,23 @@ async function main() {
       `ASSERTION FAILED: ticket #81236 regression - expected finalAction "posted_internal_note" (internal-sender guard), got "${staffResult.finalAction}".`
     );
   }
+  // --- PayPal receipt check (ticket #81322, 2026-09-24) ---
+  const paypalLabel = "PayPal 'Notification of payment received' should be filed as PayPal Receipt, solved and closed";
+  const paypalResult = resultsByLabel.get(paypalLabel);
+  if (!paypalResult) throw new Error(`ASSERTION FAILED: scenario "${paypalLabel}" did not run`);
+  if (paypalResult.ruleDecision.matchedRule !== "paypal_receipt_notification") {
+    throw new Error(
+      `ASSERTION FAILED: PayPal receipt - expected matched rule "paypal_receipt_notification", got "${paypalResult.ruleDecision.matchedRule}". ` +
+        `If this is general_faq, the "Unit price" line in the receipt body is winning again - check the rule order in config/rules.yaml.`
+    );
+  }
+  if (paypalResult.finalAction !== "paypal_receipt_solved_and_closed") {
+    throw new Error(
+      `ASSERTION FAILED: PayPal receipt - expected finalAction "paypal_receipt_solved_and_closed", got "${paypalResult.finalAction}".`
+    );
+  }
+  console.log("Regression check passed: PayPal payment notifications are filed as PayPal Receipt, solved and closed.");
+
   console.log("Regression check passed: a staff member's own follow-up to a past customer is no longer auto-quoted.");
 }
 
