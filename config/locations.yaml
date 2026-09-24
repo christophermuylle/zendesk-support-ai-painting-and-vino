@@ -50,10 +50,36 @@ locations:
     file: sacramento.md
     match_keywords: ["sacramento", "rocklin", "roseville", "lincoln, ca", "woodland, ca"]
 
+  # North County San Diego added 2026-09-24 after ticket #81313 (Palomar
+  # College, dropdown choice "Vista, CA", campus in San Marcos) came in
+  # tagged private_event_needs_location - the county's inland and northern
+  # cities weren't listed, so nothing matched and the quote had to be sent
+  # by hand. Christopher: "Vista is in San Diego County. This ticket needs
+  # the quote for San Diego with a possible travel fee." The travel-fee
+  # line is already part of every San Diego quote template.
+  #
+  # "vista, ca" and "san marcos, ca" are written with the state attached on
+  # purpose: bare "vista" would also fire on Buena Vista/Monte Vista
+  # anywhere in the country, and there is a San Marcos, TX. The qualified
+  # form still matches "San Marcos, California" as well as ", CA".
   - slug: san-diego
     display_name: "San Diego, CA"
     file: san-diego.md
-    match_keywords: ["san diego", "la jolla", "carlsbad", "del mar"]
+    match_keywords:
+      [
+        "san diego",
+        "la jolla",
+        "carlsbad",
+        "del mar",
+        "vista, ca",
+        "san marcos, ca",
+        "escondido",
+        "oceanside",
+        "encinitas",
+        "poway",
+        "chula vista",
+        "el cajon",
+      ]
 
   - slug: san-francisco-bay
     display_name: "San Francisco Bay Area, CA"
