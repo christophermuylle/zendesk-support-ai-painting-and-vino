@@ -172,6 +172,21 @@ rules:
     force_human_review: false
     add_tags: ["promo_code_question"]
 
+  # The customer's ANSWER to a clarifying question we sent (focus and/or
+  # location unknown - see src/private-event-clarifiers.ts). Matched by tag
+  # rather than by keyword: the reply is usually short ("it's a work thing,
+  # San Diego") and may not carry any of the booking keywords below, or the
+  # subject that carried them on the original inquiry. Routes to the same
+  # private_event_quote action, where the reply is re-classified with the
+  # new information and either quoted properly or - if it is STILL unclear
+  # - handed to a human rather than asked twice. Christopher, 2026-09-25.
+  - name: private_event_clarification_reply
+    match:
+      tags: ["private_event_clarification_sent"]
+    action: private_event_quote
+    force_human_review: false
+    add_tags: ["booking_question"]
+
   - name: event_booking_question
     match:
       # "party request", "guests:", "preferred date" added 2026-09-13 after

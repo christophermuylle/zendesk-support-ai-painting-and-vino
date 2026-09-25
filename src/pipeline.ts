@@ -14,12 +14,14 @@ import {
   LICENSEE_INITIAL_RESPONSE_FIELD_VALUE,
   LICENSEE_INITIAL_RESPONSE_TEXT,
   PRIVATE_EVENT_QUOTE_SENT_TAG,
+  PRIVATE_EVENT_CLARIFICATION_SENT_TAG,
   PRIVATE_EVENT_LOCATION_TAG_PREFIX,
   PRIVATE_EVENT_INTERNAL_SENDER_PREFIX,
 } from "./config.js";
 import type { DraftResult, RuleDecision, TicketContext } from "./types.js";
 import { extractOrderTotal, getLatestComment, looksLikeReceivedConfirmation, isInternalBrandSender } from "./util.js";
 import { classifyPrivateEvent, renderPrivateEventQuote, resolvePrivateEventLocationKey } from "./private-event-quotes.js";
+import { renderClarifier, type ClarifierKind } from "./private-event-clarifiers.js";
 
 export interface PipelineResult {
   ticketId: number;
@@ -44,6 +46,7 @@ export interface PipelineResult {
     | "licensee_initial_response_already_sent"
     | "licensee_received_confirmed_resolved"
     | "private_event_needs_location"
+    | "private_event_clarification_sent"
     | "no_op";
   mode: Mode;
 }
@@ -335,17 +338,17 @@ export async function processTicket(deps: PipelineDeps, ticketId: number): Promi
 
     const location = deps.locations.resolve(ctx);
     const locationKey = location ? resolvePrivateEventLocationKey(location.slug) : null;
+    const category = classifyPrivateEvent(ctx);
 
-    if (!location || !locationKey) {
-      // No location, or a location without private-event pricing on file
-      // yet - fails safe to a human rather than guessing pricing or a
-      // venue link.
+    // A location we matched but have no private-event pricing for (Phoenix,
+    // Chattanooga) is NOT something the customer can clear up - asking them
+    // where their event is would be pointless when they already told us.
+    // That still goes straight to a human.
+    if (location && !locationKey) {
       const note = [
         `[PRIVATE EVENT QUOTE - needs human]`,
         `Matched rule: ${ruleDecision.matchedRule}`,
-        location
-          ? `Location matched (${location.displayName}) but this brand's private-event pricing isn't set up for it yet - please confirm the location and send a quote by hand.`
-          : `No specific location could be identified from the ticket text - please confirm the location and send a quote by hand.`,
+        `Location matched (${location.displayName}) but this brand's private-event pricing isn't set up for it yet - please confirm the location and send a quote by hand.`,
       ].join(String.fromCharCode(10));
       await deps.zendesk.postComment(ticketId, note, {
         isPublic: false,
@@ -354,13 +357,64 @@ export async function processTicket(deps: PipelineDeps, ticketId: number): Promi
       return {
         ticketId,
         ruleDecision,
-        matchedLocation: location?.displayName ?? null,
+        matchedLocation: location.displayName,
         finalAction: "private_event_needs_location",
         mode: deps.mode,
       };
     }
 
-    const category = classifyPrivateEvent(ctx);
+    // Christopher, 2026-09-25: when we can't tell the event's FOCUS or its
+    // LOCATION, ask instead of guessing. Before this, an inquiry that said
+    // nothing about its occasion got the general quote (#81236, #81211),
+    // and one with no location match sat waiting on a human.
+    const needsFocus = category === null;
+    const needsLocation = !locationKey;
+
+    if (needsFocus || needsLocation) {
+      // Ask once and only once. If they answered and it's STILL not clear,
+      // a second round of questions would read as badgering - hand it to a
+      // human instead.
+      if (ctx.ticket.tags.includes(PRIVATE_EVENT_CLARIFICATION_SENT_TAG)) {
+        const missing = [needsFocus ? "focus" : null, needsLocation ? "location" : null].filter(Boolean).join(" and ");
+        const note = [
+          `[PRIVATE EVENT - still unclear after asking]`,
+          `Matched rule: ${ruleDecision.matchedRule}`,
+          `We already asked this customer to confirm the ${missing} of their event and their reply still doesn't make it clear, so no quote has been sent. Please read the thread and reply by hand rather than sending another round of questions.`,
+        ].join(String.fromCharCode(10));
+        await deps.zendesk.postComment(ticketId, note, {
+          isPublic: false,
+          addTags: ["needs_human", "private_event_still_unclear"],
+        });
+        return {
+          ticketId,
+          ruleDecision,
+          matchedLocation: location?.displayName ?? null,
+          finalAction: "posted_internal_note",
+          mode: deps.mode,
+        };
+      }
+
+      const kind: ClarifierKind = needsFocus && needsLocation ? "both" : needsFocus ? "focus" : "location";
+      const clarifier = renderClarifier(ctx, kind);
+      await deps.zendesk.postComment(ticketId, clarifier.plainBody, {
+        isPublic: true,
+        // Pending, not solved - we're waiting on the customer's answer.
+        // Note this ticket deliberately does NOT get
+        // PRIVATE_EVENT_QUOTE_SENT_TAG: no quote has gone out, so the
+        // 24h/72h/120h follow-up sequence must not start yet.
+        status: "pending",
+        htmlBody: clarifier.htmlBody,
+        addTags: [...(ruleDecision.addTags ?? []), PRIVATE_EVENT_CLARIFICATION_SENT_TAG],
+      });
+      return {
+        ticketId,
+        ruleDecision,
+        matchedLocation: location?.displayName ?? null,
+        finalAction: "private_event_clarification_sent",
+        mode: deps.mode,
+      };
+    }
+
     const quote = renderPrivateEventQuote(ctx, category, locationKey);
 
     await deps.zendesk.postComment(ticketId, quote.plainBody, {
@@ -377,7 +431,7 @@ export async function processTicket(deps: PipelineDeps, ticketId: number): Promi
     return {
       ticketId,
       ruleDecision,
-      matchedLocation: location.displayName,
+      matchedLocation: location!.displayName,
       finalAction: "posted_public_reply",
       mode: deps.mode,
     };

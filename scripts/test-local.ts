@@ -705,6 +705,31 @@ Instagram`,
       brand: "painting_and_vino",
     },
   },
+  {
+    // We already asked this customer what their event is, and their reply
+    // still says nothing useful. Asking a second time would read as
+    // badgering, so it goes to a human. Christopher, 2026-09-25.
+    label: "Clarifier already sent and the reply is still unclear - should go to a human, not ask again",
+    ctx: {
+      ticket: {
+        id: 90100,
+        subject: "New Private Event Inquiry",
+        description: "Hi, I'd like to book something for a group. Can you send pricing?",
+        status: "pending",
+        requester_id: CUSTOMER_ID,
+        tags: ["booking_question", "private_event_clarification_sent"],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Vague Vera", email: "vera@example.com" },
+      comments: [
+        makeComment("Hi, I'd like to book something for a group. Can you send pricing?", CUSTOMER_ID),
+        makeComment("[clarifying question already sent here]", 999),
+        makeComment("Sounds good, let me know!", CUSTOMER_ID),
+      ],
+      brand: "painting_and_vino",
+    },
+  },
 ];
 
 async function main() {
@@ -784,6 +809,47 @@ async function main() {
     );
   }
   console.log("Regression check passed: PayPal payment notifications are filed as PayPal Receipt, solved and closed.");
+
+  // --- Clarifier checks (Christopher, 2026-09-25) ---
+  const clarifierExpectations: Array<[string, string]> = [
+    [
+      "Christopher's test: Jessica, group of 6, private party in LA, no stated purpose (should be event_booking_question -> pending, Step 1/2a Standard; below the 8-person minimum)",
+      "private_event_clarification_sent",
+    ],
+    [
+      "No location identified - pricing question with no city mentioned (should ask, not guess)",
+      "private_event_clarification_sent",
+    ],
+    [
+      "Clarifier already sent and the reply is still unclear - should go to a human, not ask again",
+      "posted_internal_note",
+    ],
+    // Community wording must still quote immediately - these are
+    // Christopher's own scenarios and they must NOT start asking questions.
+    [
+      "Christopher's test: HOA community event for residents, 35 people, Orange County - should be event_booking_question -> pending, Step 1/2a STANDARD (not Corporate, despite 'association' wording)",
+      "posted_public_reply",
+    ],
+    [
+      "Christopher's test: condo association event, 20 residents, Tucson, no 'private event'/'painting event' wording (should be event_booking_question -> pending, Step 1/2a STANDARD)",
+      "posted_public_reply",
+    ],
+    [
+      "Christopher's test: bachelorette party, 15 people, San Diego (Standard category per shared.md's own Step 1, but not covered by any keyword - should be event_booking_question -> pending, Step 1/2a Standard)",
+      "posted_public_reply",
+    ],
+  ];
+  for (const [label, expected] of clarifierExpectations) {
+    const r = resultsByLabel.get(label);
+    if (!r) throw new Error(`ASSERTION FAILED: scenario "${label}" did not run`);
+    if (r.finalAction !== expected) {
+      throw new Error(`ASSERTION FAILED: ${label.slice(0, 70)}... - expected finalAction "${expected}", got "${r.finalAction}".`);
+    }
+  }
+  console.log(
+    "Regression check passed: unclear inquiries get a clarifying question, community/celebration wording still quotes immediately, and we never ask twice."
+  );
+
 
   console.log("Regression check passed: a staff member's own follow-up to a past customer is no longer auto-quoted.");
 }

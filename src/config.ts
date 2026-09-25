@@ -67,6 +67,12 @@ export const LICENSEE_INITIAL_RESPONSE_TEXT =
 // poller knows which email 2 variant to send without re-deriving it.
 export const PRIVATE_EVENT_QUOTE_SENT_TAG = "private_event_quote_sent";
 
+// Stamped when we send a clarifying first response (focus and/or location
+// unknown). Its only job is to make sure we ask ONCE: if the customer's
+// reply still doesn't tell us, the ticket goes to a human rather than
+// getting a second round of questions. Christopher, 2026-09-25.
+export const PRIVATE_EVENT_CLARIFICATION_SENT_TAG = "private_event_clarification_sent";
+
 // Guards the "private_event_quote" pipeline branch against auto-quoting a
 // message that only LOOKS like a private-event inquiry because it came
 // from one of Painting and Vino's own internal/staff mailboxes, not a

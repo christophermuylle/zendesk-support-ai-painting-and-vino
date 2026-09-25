@@ -108,7 +108,68 @@ const KIDS_KEYWORDS = [
 // analogous age pattern.
 const KIDS_AGE_PATTERN = /\b(?:turning\s+)?([4-9]|1[0-2])(?:st|nd|rd|th)?\s*[- ]?(?:years?|yrs?)?[- ]?(?:old\b|birthday\b)/i;
 
-export function classifyPrivateEvent(ctx: TicketContext): PrivateEventCategory {
+// Adult celebration signals - what makes an inquiry genuinely "standard"
+// rather than merely unclassified. Added 2026-09-25 so the classifier can
+// tell those two apart; see the null return below.
+const STANDARD_KEYWORDS = [
+  // Community / neighbourhood events. Christopher's own test scenarios
+  // specify that an HOA or condo-association event is priced as STANDARD,
+  // not Corporate, despite the "association" wording - these keywords keep
+  // those quoting immediately instead of triggering a clarifying question.
+  "hoa",
+  "homeowners association",
+  "homeowner's association",
+  "condo association",
+  "condominium association",
+  "neighborhood",
+  "neighbourhood",
+  "residents",
+  "community event",
+  "community group",
+  "church group",
+  "book club",
+  "birthday",
+  "bachelorette",
+  "bachelor party",
+  "bridal shower",
+  "baby shower",
+  "anniversary",
+  "girls night",
+  "girls' night",
+  "girl's night",
+  "ladies night",
+  "celebration",
+  "celebrating",
+  "get together",
+  "get-together",
+  "reunion",
+  "retirement",
+  "graduation",
+  "holiday party",
+  "christmas party",
+  "date night",
+  "couples",
+  "friends",
+  "family",
+];
+
+/**
+ * The event's focus, or null when the inquiry doesn't say.
+ *
+ * Christopher, 2026-09-25: "I noticed a couple Corporate Team building
+ * parties were sent the general response because it was not clear what the
+ * focus of the party was." This used to end in `return "standard"`, so an
+ * inquiry that said nothing about its occasion was indistinguishable from
+ * one that genuinely was a standard adult party - #81236 ("company holiday
+ * party") and #81211 ("Family birthday party", ages 9 to 69) both went out
+ * with the general quote because of it.
+ *
+ * Returning null instead lets the pipeline ask the customer what the
+ * occasion is rather than guess. Only a total miss returns null: if any
+ * category's keywords match, including STANDARD_KEYWORDS above, we still
+ * quote immediately and nobody gets an extra email.
+ */
+export function classifyPrivateEvent(ctx: TicketContext): PrivateEventCategory | null {
   const text = getTicketMatchText(ctx);
 
   if (KIDS_KEYWORDS.some((k) => text.includes(k)) || KIDS_AGE_PATTERN.test(text)) {
@@ -120,7 +181,10 @@ export function classifyPrivateEvent(ctx: TicketContext): PrivateEventCategory {
   if (CORPORATE_KEYWORDS.some((k) => text.includes(k))) {
     return "corporate";
   }
-  return "standard";
+  if (STANDARD_KEYWORDS.some((k) => text.includes(k))) {
+    return "standard";
+  }
+  return null;
 }
 
 // ---------------------------------------------------------------------------
