@@ -15,6 +15,7 @@ import {
   LICENSEE_INITIAL_RESPONSE_TEXT,
   PRIVATE_EVENT_QUOTE_SENT_TAG,
   PRIVATE_EVENT_CLARIFICATION_SENT_TAG,
+  PRIVATE_EVENT_FIELD_VALUE,
   PRIVATE_EVENT_LOCATION_TAG_PREFIX,
   PRIVATE_EVENT_INTERNAL_SENDER_PREFIX,
 } from "./config.js";
@@ -297,6 +298,7 @@ export async function processTicket(deps: PipelineDeps, ticketId: number): Promi
       await deps.zendesk.postComment(ticketId, note, {
         isPublic: false,
         addTags: ["needs_human", "private_event_reply_after_quote"],
+        fields: [{ id: ORDER_CONFIRMATION_FIELD_ID, value: PRIVATE_EVENT_FIELD_VALUE }],
       });
       return {
         ticketId,
@@ -353,6 +355,7 @@ export async function processTicket(deps: PipelineDeps, ticketId: number): Promi
       await deps.zendesk.postComment(ticketId, note, {
         isPublic: false,
         addTags: [...(ruleDecision.addTags ?? []), "private_event_needs_location"],
+        fields: [{ id: ORDER_CONFIRMATION_FIELD_ID, value: PRIVATE_EVENT_FIELD_VALUE }],
       });
       return {
         ticketId,
@@ -384,6 +387,7 @@ export async function processTicket(deps: PipelineDeps, ticketId: number): Promi
         await deps.zendesk.postComment(ticketId, note, {
           isPublic: false,
           addTags: ["needs_human", "private_event_still_unclear"],
+        fields: [{ id: ORDER_CONFIRMATION_FIELD_ID, value: PRIVATE_EVENT_FIELD_VALUE }],
         });
         return {
           ticketId,
@@ -405,6 +409,7 @@ export async function processTicket(deps: PipelineDeps, ticketId: number): Promi
         status: "pending",
         htmlBody: clarifier.htmlBody,
         addTags: [...(ruleDecision.addTags ?? []), PRIVATE_EVENT_CLARIFICATION_SENT_TAG],
+        fields: [{ id: ORDER_CONFIRMATION_FIELD_ID, value: PRIVATE_EVENT_FIELD_VALUE }],
       });
       return {
         ticketId,
@@ -427,6 +432,7 @@ export async function processTicket(deps: PipelineDeps, ticketId: number): Promi
         `${PRIVATE_EVENT_QUOTE_SENT_TAG}_${category}`,
         `${PRIVATE_EVENT_LOCATION_TAG_PREFIX}${locationKey}`,
       ],
+      fields: [{ id: ORDER_CONFIRMATION_FIELD_ID, value: PRIVATE_EVENT_FIELD_VALUE }],
     });
     return {
       ticketId,

@@ -71,6 +71,16 @@ export const PRIVATE_EVENT_QUOTE_SENT_TAG = "private_event_quote_sent";
 // unknown). Its only job is to make sure we ask ONCE: if the customer's
 // reply still doesn't tell us, the ticket goes to a human rather than
 // getting a second round of questions. Christopher, 2026-09-25.
+// "Reason for Customer Contacting Us" option for private-event inquiries.
+// Confirmed against the live field's option list: "Private Event Inquiry".
+// Christopher, 2026-09-28 - until now nothing in this codebase set it, so
+// every private-event ticket that had it got it by hand (all set via=web),
+// and the ones nobody remembered stayed blank (#81426, #81246). Applied on
+// every private-event path now, including the ones that hand the ticket to
+// a human, so the categorisation doesn't depend on which branch a ticket
+// happened to take.
+export const PRIVATE_EVENT_FIELD_VALUE = process.env.PRIVATE_EVENT_FIELD_VALUE ?? "private_event_inquiry";
+
 export const PRIVATE_EVENT_CLARIFICATION_SENT_TAG = "private_event_clarification_sent";
 
 // Guards the "private_event_quote" pipeline branch against auto-quoting a
