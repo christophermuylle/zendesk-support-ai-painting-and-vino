@@ -881,9 +881,16 @@ async function main() {
       "Christopher's test: HOA community event for residents, 35 people, Orange County - should be event_booking_question -> pending, Step 1/2a STANDARD (not Corporate, despite 'association' wording)",
       "posted_public_reply",
     ],
+    // Tucson quotes its own private events (Christopher, 2026-09-29), so
+    // this one now hands off instead of quoting. The Orange County HOA
+    // scenario above still covers the community-wording classification.
     [
       "Christopher's test: condo association event, 20 residents, Tucson, no 'private event'/'painting event' wording (should be event_booking_question -> pending, Step 1/2a STANDARD)",
-      "posted_public_reply",
+      "private_event_self_managed_location",
+    ],
+    [
+      "Christopher's test: Jean, Tucson corporate team building, party of 10 (should be event_booking_question -> pending, Step 1/2b Corporate)",
+      "private_event_self_managed_location",
     ],
     [
       "Christopher's test: bachelorette party, 15 people, San Diego (Standard category per shared.md's own Step 1, but not covered by any keyword - should be event_booking_question -> pending, Step 1/2a Standard)",
@@ -897,6 +904,10 @@ async function main() {
       throw new Error(`ASSERTION FAILED: ${label.slice(0, 70)}... - expected finalAction "${expected}", got "${r.finalAction}".`);
     }
   }
+  console.log(
+    "Regression check passed: Tucson private-event inquiries are handed to that location's team, never auto-quoted."
+  );
+
   console.log(
     "Regression check passed: unclear inquiries get a clarifying question, community/celebration wording still quotes immediately, and we never ask twice."
   );

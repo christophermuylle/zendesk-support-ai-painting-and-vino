@@ -17,6 +17,7 @@ import {
   PRIVATE_EVENT_CLARIFICATION_SENT_TAG,
   PRIVATE_EVENT_FIELD_VALUE,
   PRIVATE_EVENT_LOCATION_TAG_PREFIX,
+  PRIVATE_EVENT_SELF_MANAGED_LOCATIONS,
   PRIVATE_EVENT_INTERNAL_SENDER_PREFIX,
   PRIVATE_EVENT_INTERNAL_SENDER_DOMAINS,
 } from "./config.js";
@@ -49,6 +50,7 @@ export interface PipelineResult {
     | "licensee_received_confirmed_resolved"
     | "private_event_needs_location"
     | "private_event_clarification_sent"
+    | "private_event_self_managed_location"
     | "no_op";
   mode: Mode;
 }
@@ -384,6 +386,35 @@ export async function processTicket(deps: PipelineDeps, ticketId: number): Promi
         ruleDecision,
         matchedLocation: location.displayName,
         finalAction: "private_event_needs_location",
+        mode: deps.mode,
+      };
+    }
+
+    // Locations that quote their own private events (Christopher,
+    // 2026-09-29: "Tucson likes to handle their own Private Event quotes.
+    // Can we not answer theirs?"). Checked BEFORE the clarifier below, so
+    // we don't ask a Tucson customer what their occasion is and then
+    // refuse to quote them - that would be worse than saying nothing.
+    //
+    // No quote, no clarifying question, and deliberately no
+    // PRIVATE_EVENT_QUOTE_SENT_TAG either, so the 24h/72h/120h sequence
+    // never starts on a ticket we are not handling.
+    if (locationKey && PRIVATE_EVENT_SELF_MANAGED_LOCATIONS.includes(locationKey)) {
+      const note = [
+        `[PRIVATE EVENT - location handles its own quotes]`,
+        `Matched rule: ${ruleDecision.matchedRule}`,
+        `This inquiry is for ${location?.displayName ?? locationKey}, which quotes its own private events, so nothing has been sent. Please pass it to that location's team.`,
+      ].join(String.fromCharCode(10));
+      await deps.zendesk.postComment(ticketId, note, {
+        isPublic: false,
+        addTags: [...(ruleDecision.addTags ?? []), "needs_human", "private_event_self_managed_location", `${PRIVATE_EVENT_LOCATION_TAG_PREFIX}${locationKey}`],
+        fields: [{ id: ORDER_CONFIRMATION_FIELD_ID, value: PRIVATE_EVENT_FIELD_VALUE }],
+      });
+      return {
+        ticketId,
+        ruleDecision,
+        matchedLocation: location?.displayName ?? null,
+        finalAction: "private_event_self_managed_location",
         mode: deps.mode,
       };
     }

@@ -114,6 +114,23 @@ export const PRIVATE_EVENT_INTERNAL_SENDER_DOMAINS = (
 // reads this back for email 3's location-specific calendar link, rather
 // than re-running location resolution against (possibly stale) ticket text
 // days later.
+// Locations whose own team handles their private-event quotes. We never
+// auto-quote these - the ticket is tagged and left for a human to pass to
+// that location. Christopher, 2026-09-29: "Tucson likes to handle their
+// own Private Event quotes. Can we not answer theirs?"
+//
+// Deliberately scoped to PRIVATE EVENTS only, which is what he asked for:
+// every other kind of Tucson ticket (FAQs, orders, PayPal receipts) is
+// handled exactly as before. Wine and Canvas's out_of_scope_location rule
+// is the broader version of this idea - it excludes a city's tickets
+// entirely - and is a separate thing.
+export const PRIVATE_EVENT_SELF_MANAGED_LOCATIONS = (
+  process.env.PRIVATE_EVENT_SELF_MANAGED_LOCATIONS ?? "tucson"
+)
+  .split(",")
+  .map((l) => l.trim().toLowerCase())
+  .filter(Boolean);
+
 export const PRIVATE_EVENT_LOCATION_TAG_PREFIX = "private_event_location_";
 
 // Tags the follow-up poller (src/followups.ts) applies as each stage of the
