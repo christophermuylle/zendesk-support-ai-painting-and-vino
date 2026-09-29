@@ -98,6 +98,16 @@ export const PRIVATE_EVENT_CLARIFICATION_SENT_TAG = "private_event_clarification
 // company's own name.
 export const PRIVATE_EVENT_INTERNAL_SENDER_PREFIX = "paintingandvino";
 
+// The brand's own mail domains. Anything arriving FROM one of these is
+// staff, never a customer - see isInternalBrandSender in src/util.ts and
+// ticket #81443 (2026-09-29) for the incident that added this.
+export const PRIVATE_EVENT_INTERNAL_SENDER_DOMAINS = (
+  process.env.PRIVATE_EVENT_INTERNAL_SENDER_DOMAINS ?? "paintingandvino.com"
+)
+  .split(",")
+  .map((d) => d.trim().toLowerCase())
+  .filter(Boolean);
+
 // Prefix for a tag recording WHICH location a quoted ticket matched (e.g.
 // "private_event_location_tucson"), applied alongside
 // PRIVATE_EVENT_QUOTE_SENT_TAG. The follow-up poller (src/followups.ts)

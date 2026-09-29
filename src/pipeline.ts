@@ -18,6 +18,7 @@ import {
   PRIVATE_EVENT_FIELD_VALUE,
   PRIVATE_EVENT_LOCATION_TAG_PREFIX,
   PRIVATE_EVENT_INTERNAL_SENDER_PREFIX,
+  PRIVATE_EVENT_INTERNAL_SENDER_DOMAINS,
 } from "./config.js";
 import type { DraftResult, RuleDecision, TicketContext } from "./types.js";
 import { extractOrderTotal, getLatestComment, looksLikeReceivedConfirmation, isInternalBrandSender } from "./util.js";
@@ -340,7 +341,7 @@ export async function processTicket(deps: PipelineDeps, ticketId: number): Promi
     // customer message" and auto-quoted. Checked before location
     // resolution since there's no point resolving a location for a
     // message that was never a real inquiry in the first place.
-    if (isInternalBrandSender(ctx.requester?.email, PRIVATE_EVENT_INTERNAL_SENDER_PREFIX)) {
+    if (isInternalBrandSender(ctx.requester?.email, PRIVATE_EVENT_INTERNAL_SENDER_PREFIX, PRIVATE_EVENT_INTERNAL_SENDER_DOMAINS)) {
       const note = [
         `[PRIVATE EVENT - sender looks internal, not a customer]`,
         `Matched rule: ${ruleDecision.matchedRule}`,

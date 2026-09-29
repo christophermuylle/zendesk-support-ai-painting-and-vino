@@ -757,6 +757,30 @@ Instagram`,
       brand: "painting_and_vino",
     },
   },
+  {
+    // REGRESSION (ticket #81443, 2026-09-29): a staff member's payment
+    // reminder, sent as a follow-up to a closed ticket, became its own
+    // ticket with the BRAND'S OWN MAILBOX as the requester - and got
+    // auto-quoted, addressed "Hi Painting,". The customer on the thread
+    // replied "could this auto-reply be turned off?".
+    //
+    // isInternalBrandSender only checked the LOCAL PART for the brand
+    // name, so "tucson@paintingandvino.com" sailed past it: the brand
+    // name is on the right of the @. Expected: no quote.
+    label: "REGRESSION (#81443): a message from the brand's own domain must never be auto-quoted",
+    ctx: {
+      ticket: {
+        id: 81443,
+        subject: "Re: Paint N Sip - Confirmation for FirstService Residential Event on October 6",
+        description: "This is a follow-up to your previous request #81053 about your private event\n\nHi all, as noted in my email above on September 14, we require full payment for this event by tomorrow, September 29. Additionally, would you be able to confirm that the 2-4PM time works for you?\n\nHere is a link to pay. Just click the '+' sign to add the # of painters you're expecting to your cart and check out.",
+        status: "new", requester_id: 7777, tags: [],
+        created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      },
+      requester: { id: 7777, name: "Painting & Vino Tucson", email: "tucson@paintingandvino.com" },
+      comments: [makeComment("This is a follow-up to your previous request #81053 about your private event\n\nHi all, as noted in my email above on September 14, we require full payment for this event by tomorrow, September 29. Additionally, would you be able to confirm that the 2-4PM time works for you?\n\nHere is a link to pay. Just click the '+' sign to add the # of painters you're expecting to your cart and check out.", 7777)],
+      brand: "painting_and_vino",
+    },
+  },
 ];
 
 async function main() {
@@ -889,6 +913,22 @@ async function main() {
     );
   }
   console.log("Regression check passed: an agent's own reply on a quoted ticket produces nothing (#29490).");
+
+  // --- Brand-domain senders must never be auto-quoted (#81443) ---
+  const domainLabel = "REGRESSION (#81443): a message from the brand's own domain must never be auto-quoted";
+  const domainResult = resultsByLabel.get(domainLabel);
+  if (!domainResult) throw new Error(`ASSERTION FAILED: scenario "${domainLabel}" did not run`);
+  if (domainResult.ruleDecision.matchedRule !== "event_booking_question") {
+    throw new Error(
+      `ASSERTION FAILED: #81443 regression - scenario did not reach the private-event branch (matched "${domainResult.ruleDecision.matchedRule}"), so the internal-sender guard was never exercised.`
+    );
+  }
+  if (domainResult.finalAction === "posted_public_reply") {
+    throw new Error(
+      `ASSERTION FAILED: #81443 regression - a message from the brand's own mail domain was auto-quoted. ` +
+        `Staff writing to a customer must never be read as a customer inquiry.`
+    );
+  }
 
   console.log("Regression check passed: a staff member's own follow-up to a past customer is no longer auto-quoted.");
 }
