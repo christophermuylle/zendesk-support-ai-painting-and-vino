@@ -40,6 +40,26 @@ export interface IZendeskClient {
   ): Promise<void>;
   /** Used only by the follow-up poller (src/followups.ts) to find candidate tickets. */
   searchTicketIds(query: string): Promise<number[]>;
+  /**
+   * Corrects an end-user's display name. The private-event form leaves
+   * Zendesk to invent a name from the email address (see
+   * extractFormContactName in src/util.ts), and that invented name is what
+   * the follow-up poller and the agent view both read - so fixing the
+   * record, not just one reply, is what stops "Hi Bnieto1," recurring on
+   * emails 1-3.
+   */
+  updateUserName(userId: number, name: string): Promise<void>;
+  /** Full ticket records for a search, for the daily digest. */
+  searchTickets(query: string): Promise<ZendeskTicket[]>;
+  /** Creates a new ticket (used to deliver the daily digest by email). */
+  createTicket(opts: {
+    subject: string;
+    body: string;
+    requesterEmail: string;
+    ccEmails?: string[];
+    tags?: string[];
+    status?: ZendeskStatus;
+  }): Promise<number>;
 }
 
 export class ZendeskClient implements IZendeskClient {
@@ -86,6 +106,13 @@ export class ZendeskClient implements IZendeskClient {
    * should search broadly (by tag/status only) and do exact hour-math
    * filtering themselves against each ticket's real updated_at.
    */
+  async updateUserName(userId: number, name: string): Promise<void> {
+    await this.request(`/users/${userId}.json`, {
+      method: "PUT",
+      body: JSON.stringify({ user: { name } }),
+    });
+  }
+
   async searchTicketIds(query: string): Promise<number[]> {
     const ids: number[] = [];
     let path: string | null = `/search.json?query=${encodeURIComponent(query)}&sort_by=updated_at&sort_order=asc`;
@@ -98,6 +125,53 @@ export class ZendeskClient implements IZendeskClient {
       path = data.next_page ? data.next_page.replace(this.baseUrl, "") : null;
     }
     return ids;
+  }
+
+  /**
+   * Same search as searchTicketIds but keeps the whole ticket - the digest
+   * needs subjects, tags, status and dates, and re-fetching each one by id
+   * would be dozens of extra calls every morning.
+   */
+  async searchTickets(query: string): Promise<ZendeskTicket[]> {
+    const out: ZendeskTicket[] = [];
+    let path: string | null = `/search.json?query=${encodeURIComponent(query)}&sort_by=created_at&sort_order=desc`;
+    while (path && out.length < 300) {
+      const data: { results: ZendeskTicket[]; next_page: string | null } = await this.request(path);
+      out.push(...(data.results ?? []));
+      path = data.next_page ? data.next_page.replace(this.baseUrl, "") : null;
+    }
+    return out;
+  }
+
+  /**
+   * Creates a ticket. Used to deliver the daily private-event digest: the
+   * recipients go on as requester and CCs, so Zendesk emails it to them and
+   * we need no mail server, no SMTP credentials and no new integration. It
+   * is created already solved, so it never lands in anyone's open queue.
+   */
+  async createTicket(opts: {
+    subject: string;
+    body: string;
+    requesterEmail: string;
+    ccEmails?: string[];
+    tags?: string[];
+    status?: ZendeskStatus;
+  }): Promise<number> {
+    const ticket: Record<string, unknown> = {
+      subject: opts.subject,
+      comment: { body: opts.body, public: true },
+      requester: { email: opts.requesterEmail, name: opts.requesterEmail.split("@")[0] },
+      status: opts.status ?? "solved",
+    };
+    if (opts.ccEmails?.length) {
+      ticket.email_ccs = opts.ccEmails.map((email) => ({ user_email: email, action: "put" }));
+    }
+    if (opts.tags?.length) ticket.tags = opts.tags;
+    const data: { ticket: { id: number } } = await this.request(`/tickets.json`, {
+      method: "POST",
+      body: JSON.stringify({ ticket }),
+    });
+    return data.ticket.id;
   }
 
   async getTicket(ticketId: number): Promise<ZendeskTicket> {

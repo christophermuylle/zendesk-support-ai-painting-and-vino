@@ -42,6 +42,7 @@ import {
 } from "./config.js";
 import type { PrivateEventCategory } from "./types.js";
 import { renderEmail1, renderEmail2, renderEmail3 } from "./followup-templates.js";
+import { getFirstName } from "./private-event-quotes.js";
 import { loadPromoCodeConfig, claimNextCode } from "./promo-codes.js";
 
 const HOURS_STAGE_1 = 24;
@@ -70,10 +71,7 @@ function hoursSince(iso: string): number {
   return (Date.now() - new Date(iso).getTime()) / (1000 * 60 * 60);
 }
 
-function firstName(name: string | null | undefined): string {
-  if (!name) return "there";
-  return name.trim().split(/\s+/)[0] || "there";
-}
+
 
 function eventCategoryFromTags(tags: string[]): PrivateEventCategory | null {
   for (const cat of ["fundraiser", "kiddos", "standard", "corporate"] as const) {
@@ -166,7 +164,7 @@ async function processCandidate(
   if (hoursSince(lastOutbound.created_at) < MIN_HOURS_BETWEEN_SENDS) return { outcome: "skipped_not_due" };
 
   const stageTag = stage === 1 ? FOLLOW_UP_1_SENT_TAG : stage === 2 ? FOLLOW_UP_2_SENT_TAG : FOLLOW_UP_3_SENT_TAG;
-  const first = firstName(ctx.requester?.name);
+  const first = getFirstName(ctx);
 
   if (stage === 1) {
     await deps.zendesk.postComment(ticketId, renderEmail1(), {

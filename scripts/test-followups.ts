@@ -35,7 +35,12 @@ interface StoredTicket {
 }
 
 class InMemoryZendesk implements IZendeskClient {
+  readonly renamedUsers: Array<{ userId: number; name: string }> = [];
   constructor(private store: Map<number, StoredTicket>) {}
+
+  async updateUserName(userId: number, name: string): Promise<void> {
+    this.renamedUsers.push({ userId, name });
+  }
 
   async getTicketContext(ticketId: number): Promise<TicketContext> {
     const t = this.store.get(ticketId);
@@ -75,6 +80,15 @@ class InMemoryZendesk implements IZendeskClient {
     return [...this.store.values()]
       .filter((t) => t.ticket.status === "pending" && t.ticket.tags.includes("private_event_quote_sent"))
       .map((t) => t.ticket.id);
+  }
+
+  // The digest never runs in these scenario tests; stubs keep the mock
+  // satisfying IZendeskClient.
+  async searchTickets(): Promise<never[]> {
+    return [];
+  }
+  async createTicket(): Promise<number> {
+    throw new Error("createTicket is not expected in this test");
   }
 }
 

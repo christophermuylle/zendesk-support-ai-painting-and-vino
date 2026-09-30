@@ -18,6 +18,7 @@ import { AiDrafter, type IAiDrafter } from "../src/ai.js";
 import type { IZendeskClient } from "../src/zendesk.js";
 import { processTicket } from "../src/pipeline.js";
 import type { ActionType, DraftResult, RuleDecision, TicketContext, ZendeskComment } from "../src/types.js";
+import { extractFormContactName, firstNameFromFullName, looksMachineDerivedName } from "../src/util.js";
 
 const CONFIG_DIR = path.resolve(process.cwd(), "config");
 const sharedKnowledgeBase = fs.readFileSync(path.join(CONFIG_DIR, "knowledge-base", "shared.md"), "utf-8");
@@ -30,6 +31,10 @@ const rules = new RulesEngine(path.join(CONFIG_DIR, "rules.yaml"));
 const locations = new LocationResolver(path.join(CONFIG_DIR, "locations.yaml"));
 
 // --- Mock Zendesk: records what would have been posted instead of calling the API ---
+// Records every requester-name correction the pipeline makes, so a
+// scenario can assert on it rather than trusting the log.
+const nameCorrections: Array<{ userId: number; name: string }> = [];
+
 class MockZendeskClient implements IZendeskClient {
   constructor(private ctx: TicketContext) {}
   async getTicketContext(): Promise<TicketContext> {
@@ -58,6 +63,19 @@ class MockZendeskClient implements IZendeskClient {
     // Not exercised by this per-scenario harness (see src/followups.ts for
     // the follow-up poller this backs) - no real Zendesk to search here.
     return [];
+  }
+  async updateUserName(userId: number, name: string): Promise<void> {
+    nameCorrections.push({ userId, name });
+    console.log(`\n  -> would rename Zendesk user ${userId} to "${name}"`);
+  }
+
+  // The digest never runs in these scenario tests; stubs keep the mock
+  // satisfying IZendeskClient.
+  async searchTickets(): Promise<never[]> {
+    return [];
+  }
+  async createTicket(): Promise<number> {
+    throw new Error("createTicket is not expected in this test");
   }
 }
 
@@ -916,6 +934,28 @@ Instagram`,
       brand: "painting_and_vino",
     },
   },
+  {
+    // REGRESSION (ticket #81249, 2026-09-30): Painting and Vino's form
+    // emails us from the customer's own address but Zendesk still derives
+    // the display name from it - "Bnieto1" for Brenda Nieto, "Crichardson"
+    // for Chanel Richardson (#81445). Note the shape: unlike Wine and
+    // Canvas, the label sits alone on its line and the value follows a run
+    // of tab-only lines, so a "Name:" parser finds nothing here.
+    // Expected: the greeting and the user record both say Brenda.
+    label: "REGRESSION (#81249): the form name beats the name Zendesk invented, on PV's label-per-line form",
+    ctx: {
+      ticket: {
+        id: 81249, subject: "Private Event Inquiry",
+        description: "Name\n\t\t\n\t\t\n\t\tBrenda Nieto\n\t\t\n\t\tCompany Name\n\t\t\n\t\tAllstate Insurance\n\t\t\n\t\tEmail\n\t\t\n\t\tbnieto1@allstate.com\n\t\t\n\t\tPhone\n\t\t\n\t\t(951) 662-2298\n\t\t\n\t\tDate of Event\n\t\t\n\t\t10/30/2026\n\t\t\n\t\tTime of Event\n\t\t\n\t\t07:00 pm\n\t\t\n\t\tWhat location do you want to host the event in (choose one from dropdown choices listed below)?\n\t\t\n\t\tRiverside, CA\n\t\t\n\t\tNumber of Expected Guests\n\t\t\n\t\t8\n\t\t\n\t\tTell us about your Event (Special Occasion?)\n\t\t\n\t\tCorporate team building\n\t\t\n\t\tSource Page\n\t\t\n\t\thttps://paintingandvino.com/private-events-paint-party/",
+        status: "new", requester_id: CUSTOMER_ID,
+        tags: [],
+        created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Bnieto1", email: "bnieto1@allstate.com" },
+      comments: [makeComment("Name\n\t\t\n\t\t\n\t\tBrenda Nieto\n\t\t\n\t\tCompany Name\n\t\t\n\t\tAllstate Insurance\n\t\t\n\t\tEmail\n\t\t\n\t\tbnieto1@allstate.com\n\t\t\n\t\tPhone\n\t\t\n\t\t(951) 662-2298\n\t\t\n\t\tDate of Event\n\t\t\n\t\t10/30/2026\n\t\t\n\t\tTime of Event\n\t\t\n\t\t07:00 pm\n\t\t\n\t\tWhat location do you want to host the event in (choose one from dropdown choices listed below)?\n\t\t\n\t\tRiverside, CA\n\t\t\n\t\tNumber of Expected Guests\n\t\t\n\t\t8\n\t\t\n\t\tTell us about your Event (Special Occasion?)\n\t\t\n\t\tCorporate team building\n\t\t\n\t\tSource Page\n\t\t\n\t\thttps://paintingandvino.com/private-events-paint-party/", CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
 ];
 
 async function main() {
@@ -957,6 +997,47 @@ async function main() {
     );
   }
   console.log(String.fromCharCode(10) + "Regression check passed: reply-after-quote does not re-send the quote email.");
+
+  // --- Regression checks for the requester-name fix (2026-09-30, #81249) ---
+  const nameLabel = "REGRESSION (#81249): the form name beats the name Zendesk invented, on PV's label-per-line form";
+  if (!resultsByLabel.get(nameLabel)) throw new Error(`ASSERTION FAILED: scenario "${nameLabel}" did not run`);
+  const rename = nameCorrections.find((c) => c.userId === CUSTOMER_ID);
+  if (!rename) {
+    throw new Error(
+      `ASSERTION FAILED: requester-name fix - the pipeline never corrected the Zendesk user record. ` +
+        `Follow-up emails 1-3 read the record, not the reply, so without this they all go out as "Hi Bnieto1,".`
+    );
+  }
+  if (rename.name !== "Brenda Nieto") {
+    throw new Error(`ASSERTION FAILED: requester-name fix - expected the record set to "Brenda Nieto", got "${rename.name}".`);
+  }
+  console.log(`Regression check passed: requester name corrected to "${rename.name}" from PV's label-per-line form.`);
+
+  // The label-per-line shape is the fragile part: an EMPTY Name field must
+  // not hand us the next label ("Company Name" -> "Allstate Insurance").
+  const emptyNameCtx: TicketContext = {
+    ticket: { ...scenarios[0].ctx.ticket, id: 99998, description: "Name\n\t\t\n\t\tCompany Name\n\t\t\n\t\tAllstate Insurance", requester_id: CUSTOMER_ID },
+    requester: { id: CUSTOMER_ID, name: "Someone Real", email: "someone@example.com" },
+    comments: [],
+    brand: "painting_and_vino",
+  };
+  if (extractFormContactName(emptyNameCtx) !== null) {
+    throw new Error(
+      `ASSERTION FAILED: an empty Name field must yield null, got "${extractFormContactName(emptyNameCtx)}" - ` +
+        `that is how a customer ends up greeted "Hi Allstate,".`
+    );
+  }
+  if (extractFormContactName({ ...emptyNameCtx, ticket: { ...emptyNameCtx.ticket, description: "Name\n\t\t\n\t\t[name]" } }) !== null) {
+    throw new Error(`ASSERTION FAILED: an unrendered "[name]" placeholder must be rejected.`);
+  }
+  if (firstNameFromFullName("Halpin, Elisa") !== "Elisa") {
+    throw new Error(`ASSERTION FAILED: firstNameFromFullName("Halpin, Elisa") should be "Elisa".`);
+  }
+  // A real full name on file must survive a form nickname.
+  if (looksMachineDerivedName("Hanadya Ale", "hanadya@example.com")) {
+    throw new Error(`ASSERTION FAILED: "Hanadya Ale" is a real name and must not be overwritten by a form nickname.`);
+  }
+  console.log("Regression check passed: name parsing rejects empty fields and placeholders, and leaves real names alone.");
 
   // --- Regression check for ticket #81236 (see the scenario above) ---
   const staffLabel = "REGRESSION (ticket #81236): staff follow-up to a past customer should NOT be auto-quoted";

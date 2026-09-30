@@ -41,7 +41,7 @@
 // the kids template here - see KIDS_KEYWORDS below.
 
 import type { TicketContext, PrivateEventCategory } from "./types.js";
-import { getTicketMatchText } from "./util.js";
+import { extractFormContactName, firstNameFromFullName, getTicketMatchText } from "./util.js";
 
 // PrivateEventCategory ("fundraiser" | "kiddos" | "standard" | "corporate")
 // lives in types.ts, not here - it predates this file (originally used to
@@ -429,9 +429,14 @@ export function minimumGroupSizeFor(loc: PrivateEventLocationInfo, category: Pri
 
 /** First name for the "Hi [First Name]," greeting - falls back to "there" if we only have a full name or nothing. */
 export function getFirstName(ctx: TicketContext): string {
-  const name = ctx.requester?.name?.trim();
-  if (!name) return "there";
-  return name.split(/\s+/)[0];
+  // The name the customer typed on the form beats the one Zendesk invented
+  // from their email address - see extractFormContactName in util.ts.
+  // #81249 was on file as "Bnieto1" and #81445 as "Crichardson".
+  return (
+    firstNameFromFullName(extractFormContactName(ctx)) ??
+    firstNameFromFullName(ctx.requester?.name) ??
+    "there"
+  );
 }
 
 export interface RenderedQuote {
