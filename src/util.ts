@@ -118,10 +118,15 @@ export function looksLikeReceivedConfirmation(body: string): boolean {
 export function isInternalBrandSender(
   email: string | null | undefined,
   brandLocalPartPrefix: string,
-  brandDomains: readonly string[] = []
+  brandDomains: readonly string[] = [],
+  knownStaffAddresses: readonly string[] = []
 ): boolean {
   if (!email) return false;
-  const [localPart, domain] = email.trim().toLowerCase().split("@");
+  const normalised = email.trim().toLowerCase();
+  const [localPart, domain] = normalised.split("@");
+
+  // Named staff addresses that neither rule below would catch.
+  if (knownStaffAddresses.some((a) => a.toLowerCase() === normalised)) return true;
 
   // Named-after-the-brand mailboxes, e.g. "paintingandvino.noc@gmail.com".
   if (brandLocalPartPrefix && localPart?.startsWith(brandLocalPartPrefix.toLowerCase())) return true;

@@ -895,6 +895,27 @@ Instagram`,
       brand: "painting_and_vino",
     },
   },
+  {
+    // Bonnie coordinates private events for BOTH brands from
+    // wineandcanvas.events@gmail.com. On Wine and Canvas the
+    // "wineandcanvas" prefix catches her; on this brand nothing would have
+    // - not the "paintingandvino" prefix, not the paintingandvino.com
+    // domain. Same shape as #81443, one brand over. Christopher supplied
+    // the address 2026-09-30. Note this scenario DOES carry the form
+    // marker, so only the sender check can stop it.
+    label: "Bonnie's own address must be treated as staff on this brand too",
+    ctx: {
+      ticket: {
+        id: 90800, subject: "New Private Event Inquiry",
+        description: "Private event inquiry\n\nName: Bonnie\nGuests: 20\nLocation: San Diego, CA\nAdditional Info: corporate team building\n\nSource Page\nhttps://paintingandvino.com/private-events-paint-party/",
+        status: "new", requester_id: 7900, tags: [],
+        created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      },
+      requester: { id: 7900, name: "Bonnie", email: "wineandcanvas.events@gmail.com" },
+      comments: [makeComment("Private event inquiry\n\nName: Bonnie\nGuests: 20\nLocation: San Diego, CA\nAdditional Info: corporate team building\n\nSource Page\nhttps://paintingandvino.com/private-events-paint-party/", 7900)],
+      brand: "painting_and_vino",
+    },
+  },
 ];
 
 async function main() {
@@ -1125,6 +1146,18 @@ async function main() {
     );
   }
   console.log("Regression check passed: only form submissions are answered automatically; free-form email is held for a human.");
+
+  // --- Known staff addresses (2026-09-30) ---
+  const bonnieLabel = "Bonnie's own address must be treated as staff on this brand too";
+  const bonnie = resultsByLabel.get(bonnieLabel);
+  if (!bonnie) throw new Error(`ASSERTION FAILED: scenario "${bonnieLabel}" did not run`);
+  if (bonnie.finalAction === "posted_public_reply" || bonnie.finalAction === "private_event_clarification_sent") {
+    throw new Error(
+      `ASSERTION FAILED: Bonnie's own address was answered as if she were a customer ("${bonnie.finalAction}"). ` +
+        `Her address carries the other brand's name, so only the explicit staff-address list can catch it here.`
+    );
+  }
+  console.log("Regression check passed: known staff addresses are never answered as customers, on either brand.");
 
   console.log("Regression check passed: a staff member's own follow-up to a past customer is no longer auto-quoted.");
 }
