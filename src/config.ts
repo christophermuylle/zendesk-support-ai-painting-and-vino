@@ -147,16 +147,25 @@ export const PRIVATE_EVENT_INTERNAL_SENDER_DOMAINS = (
 // days later.
 // Locations whose own team handles their private-event quotes. We never
 // auto-quote these - the ticket is tagged and left for a human to pass to
-// that location. Christopher, 2026-09-29: "Tucson likes to handle their
-// own Private Event quotes. Can we not answer theirs?"
+// that location.
 //
-// Deliberately scoped to PRIVATE EVENTS only, which is what he asked for:
-// every other kind of Tucson ticket (FAQs, orders, PayPal receipts) is
-// handled exactly as before. Wine and Canvas's out_of_scope_location rule
-// is the broader version of this idea - it excludes a city's tickets
-// entirely - and is a separate thing.
+// EMPTY as of 2026-10-01: Christopher, "I was just informed that Tucson
+// should not be handling their own Private Event inquiries anymore", so
+// Tucson is auto-quoted again like every other launched location. The
+// mechanism stays because it is the right shape if another location asks
+// (Christopher, 2026-09-29: "Tucson likes to handle their own Private Event
+// quotes. Can we not answer theirs?"), and because it can be turned on
+// again from Railway without a deploy - set
+// PRIVATE_EVENT_SELF_MANAGED_LOCATIONS to a comma-separated list of
+// location keys.
+//
+// Deliberately scoped to PRIVATE EVENTS only: every other kind of ticket
+// for these locations (FAQs, orders, PayPal receipts) is handled exactly as
+// before. Wine and Canvas's out_of_scope_location rule is the broader
+// version of this idea - it excludes a city's tickets entirely - and is a
+// separate thing.
 export const PRIVATE_EVENT_SELF_MANAGED_LOCATIONS = (
-  process.env.PRIVATE_EVENT_SELF_MANAGED_LOCATIONS ?? "tucson"
+  process.env.PRIVATE_EVENT_SELF_MANAGED_LOCATIONS ?? ""
 )
   .split(",")
   .map((l) => l.trim().toLowerCase())
