@@ -12,7 +12,9 @@
 
 import type { IZendeskClient } from "./zendesk.js";
 import type { ZendeskTicket } from "./types.js";
+import { extractFormContactNameFromText } from "./util.js";
 import {
+  PRIVATE_EVENT_FIELD_VALUE,
   PRIVATE_EVENT_LOCATION_TAG_PREFIX,
   PRIVATE_EVENT_QUOTE_SENT_TAG,
   FOLLOW_UP_1_SENT_TAG,
@@ -67,7 +69,14 @@ function toRow(t: ZendeskTicket, stage: string): Row {
   const body = t.description ?? "";
   return {
     id: t.id,
-    who: (t.subject ?? "").replace(/^(re:|fwd:)\s*/i, "").slice(0, 46) || `#${t.id}`,
+    // The customer's name from the form body, NOT the subject: both
+    // brands' forms use one fixed subject on every ticket ("New Private
+    // Event Inquiry"), so a subject-keyed digest is a wall of identical
+    // rows. Subject is the fallback for anything that did not come through
+    // the form.
+    who:
+      extractFormContactNameFromText(body) ??
+      ((t.subject ?? "").replace(/^(re:|fwd:)\s*/i, "").slice(0, 46) || `#${t.id}`),
     territory: prettify(tagValue(t.tags, PRIVATE_EVENT_LOCATION_TAG_PREFIX)),
     focus: prettify(tagValue(t.tags, `${PRIVATE_EVENT_QUOTE_SENT_TAG}_`)),
     guests: field(body, [/guests?:?\s*\**\s*(\d{1,4})/i, /number of expected guests\s*\**\s*(\d{1,4})/i]),
@@ -96,7 +105,14 @@ export async function buildDigest(zendesk: IZendeskClient, cfg: DigestConfig, no
 
   const [held, fresh, waiting, quiet, ready] = await Promise.all([
     zendesk.searchTickets(`type:ticket tags:private_event_not_form_submission status<solved`),
-    zendesk.searchTickets(`type:ticket tags:private_events created>${yesterday}`),
+    // PRIVATE_EVENT_FIELD_VALUE, not a literal: "Reason for Customer
+    // Contacting Us" is a Zendesk tagger field, and a tagger stamps its
+    // value on the ticket as a tag. So the tag for "this is a private
+    // event inquiry" is private_events on Wine and Canvas but
+    // private_event_inquiry on Painting and Vino. Hardcoding either one
+    // leaves the other brand's "new in the last 24 hours" permanently
+    // empty - caught on a live preview 2026-10-01 before this ever ran.
+    zendesk.searchTickets(`type:ticket tags:${PRIVATE_EVENT_FIELD_VALUE} created>${yesterday}`),
     zendesk.searchTickets(`type:ticket tags:${PRIVATE_EVENT_QUOTE_SENT_TAG} status:pending`),
     zendesk.searchTickets(`type:ticket tags:${FOLLOW_UP_3_SENT_TAG} status:pending`),
     zendesk.searchTickets(`type:ticket tags:private_event_reply_after_quote status<solved`),
