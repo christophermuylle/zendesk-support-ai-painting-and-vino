@@ -38,12 +38,68 @@ locations:
   - slug: los-angeles
     display_name: "Los Angeles, CA"
     file: los-angeles.md
-    match_keywords: ["los angeles", "l.a. county", "la county", "arcadia, ca", "santa monica"]
+    # All 88 incorporated Los Angeles County cities PLUS all 24 San
+    # Bernardino County cities - Christopher, 2026-10-01: "Los Angeles
+    # County - Los Angeles County, San Bernardino County" / "All cities in
+    # those COunties". San Bernardino has no key of its own, so it prices and
+    # presents as Los Angeles.
+    #
+    # State-qualified, because bare they are words before they are places:
+    # avalon, bell, carson, commerce, city of industry, gardena, paramount,
+    # south gate, torrance, vernon, walnut, lynwood, colton, highland,
+    # needles, ontario (Canada), upland, joshua tree (a painting title if
+    # ever there was one), and glendale (Glendale, AZ is a Phoenix suburb).
+    #
+    # KNOWN EDGE CASE: "ontario, ca" also matches "Ontario, Canada" as a
+    # substring. Kept anyway - "Ontario, CA" is how a real San Bernardino
+    # customer writes it, and a Canadian booking a California paint party is
+    # not a case worth losing that recall for. A word-boundary matcher in
+    # src/locations.ts would fix this class of problem properly.
+    match_keywords: [
+      "los angeles", "l.a. county", "la county", "arcadia, ca", "arcadia ca", "san marino, ca", "san marino ca", "agoura hills", "alhambra", "artesia", "azusa",
+      "baldwin park", "bell gardens", "bellflower", "beverly hills", "bradbury", "burbank",
+      "calabasas", "cerritos", "claremont", "compton", "covina", "cudahy", "culver city",
+      "diamond bar", "downey", "duarte", "el segundo", "glendora", "hawaiian gardens", "hawthorne",
+      "hermosa beach", "hidden hills", "huntington park", "inglewood", "irwindale",
+      "la canada flintridge", "la cañada flintridge", "la habra heights", "la mirada", "la puente",
+      "la verne", "lakewood", "lancaster", "lawndale", "lomita", "long beach", "malibu",
+      "manhattan beach", "maywood", "monrovia", "montebello", "monterey park", "norwalk", "palmdale",
+      "palos verdes estates", "pico rivera", "pomona", "rancho palos verdes", "redondo beach",
+      "rolling hills", "rolling hills estates", "rosemead", "san dimas", "san fernando", "san gabriel",
+      "santa clarita", "santa fe springs", "santa monica", "sierra madre", "signal hill",
+      "south el monte", "south pasadena", "temple city", "west covina", "west hollywood",
+      "westlake village", "whittier", "el monte", "pasadena", "san bernardino county", "adelanto",
+      "apple valley", "barstow", "big bear lake", "chino", "chino hills", "fontana", "grand terrace",
+      "hesperia", "loma linda", "montclair", "rancho cucamonga", "redlands", "rialto",
+      "san bernardino", "twentynine palms", "victorville", "yucaipa", "yucca valley", "avalon, ca",
+      "avalon ca", "bell, ca", "bell ca", "carson, ca", "carson ca", "commerce, ca", "commerce ca",
+      "city of industry", "industry, ca", "industry ca", "glendale, ca", "glendale ca", "gardena, ca",
+      "gardena ca", "paramount, ca", "paramount ca", "south gate, ca", "south gate ca", "torrance, ca",
+      "torrance ca", "vernon, ca", "vernon ca", "walnut, ca", "walnut ca", "lynwood, ca", "lynwood ca",
+      "colton, ca", "colton ca", "highland, ca", "highland ca", "needles, ca", "needles ca",
+      "ontario, ca", "ontario ca", "upland, ca", "upland ca", "joshua tree, ca", "joshua tree ca"
+    ]
 
   - slug: orange-county
     display_name: "Orange County, CA"
     file: orange-county.md
-    match_keywords: ["orange county", "anaheim", "huntington beach", "newport beach"]
+    # All 34 incorporated Orange County cities (Christopher, 2026-10-01:
+    # "All cities in those COunties"). Seven are state-qualified because the
+    # matcher is a plain substring test: "brea" is inside "bread" and
+    # "break", "orange" is a colour that appears in half our paint
+    # descriptions, "cypress" and "lake forest" read as painting titles, and
+    # "stanton", "villa park" and "westminster" are names or venues as often
+    # as places.
+    match_keywords: [
+      "orange county", "aliso viejo", "anaheim", "buena park", "costa mesa", "dana point",
+      "fountain valley", "fullerton", "garden grove", "huntington beach", "irvine", "la habra",
+      "la palma", "laguna beach", "laguna hills", "laguna niguel", "laguna woods", "los alamitos",
+      "mission viejo", "newport beach", "placentia", "rancho santa margarita", "san clemente",
+      "san juan capistrano", "santa ana", "seal beach", "tustin", "yorba linda", "brea, ca", "brea ca",
+      "cypress, ca", "cypress ca", "lake forest, ca", "lake forest ca", "stanton, ca", "stanton ca",
+      "villa park, ca", "villa park ca", "westminster, ca", "westminster ca", "orange, ca",
+      "orange ca"
+    ]
 
   - slug: sacramento
     display_name: "Sacramento, CA"
@@ -89,7 +145,16 @@ locations:
   - slug: riverside-county
     display_name: "Riverside County, CA"
     file: riverside-county.md
-    match_keywords: ["riverside county", "riverside, ca", "temecula"]
+    # All 28 incorporated Riverside County cities. "banning" is a verb,
+    # "corona" and "canyon lake" are a drink and a painting title, so those
+    # are state-qualified.
+    match_keywords: [
+      "riverside county", "beaumont", "blythe", "calimesa", "cathedral city", "coachella",
+      "desert hot springs", "eastvale", "hemet", "indian wells", "indio", "jurupa valley", "la quinta",
+      "lake elsinore", "menifee", "moreno valley", "murrieta", "norco", "palm desert", "palm springs",
+      "perris", "rancho mirage", "san jacinto", "temecula", "wildomar", "banning, ca", "banning ca",
+      "canyon lake, ca", "canyon lake ca", "corona, ca", "corona ca", "riverside, ca", "riverside ca"
+    ]
 
   - slug: kansas-city
     display_name: "Kansas City, MO"
