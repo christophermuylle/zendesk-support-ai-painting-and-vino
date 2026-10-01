@@ -256,6 +256,24 @@ const DEFAULT_CORPORATE_TIERS: PricingTierRow[] = [
   { range: "30-49", pricePerPerson: 45 },
   { range: "50+", pricePerPerson: 40 },
 ];
+// San Francisco Bay Area runs its own HIGHER tier, confirmed by Christopher
+// 2026-09-16 and tabulated in shared.md. This was missing: every SF quote
+// used the default tables and went out $5/person light, in both categories.
+// shared.md even documents the earlier human version of the same mistake
+// (ticket #81129, "a Corporate SF event was quoted $40/person from the wrong
+// table"), and the code reproduced it four more times - #81445, #81426,
+// #81244 and #81272 all received 50/45/40 instead of 55/50/45.
+const SAN_FRANCISCO_BAY_STANDARD_TIERS: PricingTierRow[] = [
+  { range: "8-29", pricePerPerson: 50 },
+  { range: "30-49", pricePerPerson: 45 },
+  { range: "50+", pricePerPerson: 40 },
+];
+const SAN_FRANCISCO_BAY_CORPORATE_TIERS: PricingTierRow[] = [
+  { range: "8-29", pricePerPerson: 55 },
+  { range: "30-49", pricePerPerson: 50 },
+  { range: "50+", pricePerPerson: 45 },
+];
+
 // Kansas City runs its own lower tier (shared.md, confirmed explicitly).
 const KANSAS_CITY_STANDARD_TIERS: PricingTierRow[] = [
   { range: "8-29", pricePerPerson: 39 },
@@ -274,6 +292,7 @@ const KANSAS_CITY_CORPORATE_TIERS: PricingTierRow[] = [
 // quote the base tier rather than parsing an exact guest count.
 const DEFAULT_FUNDRAISER_RETAIL = DEFAULT_STANDARD_TIERS[0].pricePerPerson; // 45
 const KANSAS_CITY_FUNDRAISER_RETAIL = KANSAS_CITY_STANDARD_TIERS[0].pricePerPerson; // 39
+const SAN_FRANCISCO_BAY_FUNDRAISER_RETAIL = SAN_FRANCISCO_BAY_STANDARD_TIERS[0].pricePerPerson; // 50
 const FUNDRAISER_DISCOUNT = 5;
 
 // Kids' events flat per-person rate: "$35/person for most cities, $29/
@@ -287,7 +306,9 @@ const KIDS_SAN_FRANCISCO_BAY_PRICE = 40;
 // company-wide 12-person minimum (shared.md's "Other formats" note) that
 // overrides the location's usual minimum - see FUNDRAISER_MINIMUM below.
 const DEFAULT_MINIMUM_GROUP_SIZE = 8;
-const HIGHER_MINIMUM_LOCATIONS: ReadonlySet<PrivateEventLocationKey> = new Set(["tucson", "sacramento", "san-francisco-bay"]);
+// San Francisco was in here until 2026-10-01; shared.md has had it at the
+// standard 8 since 2026-09-15 (per Jessica).
+const HIGHER_MINIMUM_LOCATIONS: ReadonlySet<PrivateEventLocationKey> = new Set(["tucson", "sacramento"]);
 const HIGHER_MINIMUM_GROUP_SIZE = 10;
 const FUNDRAISER_MINIMUM_GROUP_SIZE = 12;
 
@@ -383,12 +404,15 @@ export const PRIVATE_EVENT_LOCATIONS: Record<PrivateEventLocationKey, PrivateEve
     displayName: "San Francisco Bay Area, CA",
     venueLinks: [{ label: "San Francisco Bay Area Venue List Link", url: SAN_FRANCISCO_BAY_VENUE_LIST }],
     pricing: {
-      corporateTiers: DEFAULT_CORPORATE_TIERS,
-      standardTiers: DEFAULT_STANDARD_TIERS,
-      fundraiserRetail: DEFAULT_FUNDRAISER_RETAIL,
+      corporateTiers: SAN_FRANCISCO_BAY_CORPORATE_TIERS,
+      standardTiers: SAN_FRANCISCO_BAY_STANDARD_TIERS,
+      fundraiserRetail: SAN_FRANCISCO_BAY_FUNDRAISER_RETAIL,
       kidsPricePerPerson: KIDS_SAN_FRANCISCO_BAY_PRICE,
     },
-    minimumGroupSize: HIGHER_MINIMUM_GROUP_SIZE,
+    // 8, not 10: shared.md says so in three separate places - "San
+    // Francisco moved from a 10-person to the standard 8-person minimum per
+    // Jessica, 2026-09-15".
+    minimumGroupSize: DEFAULT_MINIMUM_GROUP_SIZE,
   },
   "riverside-county": {
     displayName: "Riverside County, CA",

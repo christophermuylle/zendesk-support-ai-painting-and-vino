@@ -19,6 +19,7 @@ import type { IZendeskClient } from "../src/zendesk.js";
 import { processTicket } from "../src/pipeline.js";
 import type { ActionType, DraftResult, RuleDecision, TicketContext, ZendeskComment } from "../src/types.js";
 import { extractFormContactName, firstNameFromFullName, looksMachineDerivedName } from "../src/util.js";
+import { getLocationInfo, minimumGroupSizeFor, type PrivateEventLocationKey } from "../src/private-event-quotes.js";
 
 const CONFIG_DIR = path.resolve(process.cwd(), "config");
 const sharedKnowledgeBase = fs.readFileSync(path.join(CONFIG_DIR, "knowledge-base", "shared.md"), "utf-8");
@@ -997,6 +998,47 @@ async function main() {
     );
   }
   console.log(String.fromCharCode(10) + "Regression check passed: reply-after-quote does not re-send the quote email.");
+
+  // --- Per-location pricing table (2026-10-01) ---
+  // San Francisco Bay Area had been using the DEFAULT tables, so every SF
+  // quote went out $5/person light in both categories: #81445, #81426,
+  // #81244 and #81272 all got 50/45/40 where shared.md's confirmed SF
+  // Corporate table is 55/50/45. shared.md documents the human version of
+  // the same error (ticket #81129) - the code then repeated it four times.
+  // Asserting every location's whole table, not just SF, so the next
+  // location that gets its own rates cannot quietly inherit the defaults.
+  {
+    const expected: Record<string, { std: number[]; corp: number[]; min: number }> = {
+      "san-francisco-bay": { std: [50, 45, 40], corp: [55, 50, 45], min: 8 },
+      "los-angeles":       { std: [45, 40, 35], corp: [50, 45, 40], min: 8 },
+      "orange-county":     { std: [45, 40, 35], corp: [50, 45, 40], min: 8 },
+      "riverside-county":  { std: [45, 40, 35], corp: [50, 45, 40], min: 8 },
+      "san-diego":         { std: [45, 40, 35], corp: [50, 45, 40], min: 8 },
+      tucson:              { std: [45, 40, 35], corp: [50, 45, 40], min: 10 },
+      sacramento:          { std: [45, 40, 35], corp: [50, 45, 40], min: 10 },
+      "kansas-city":       { std: [39, 35, 30], corp: [44, 40, 35], min: 8 },
+    };
+    for (const [key, want] of Object.entries(expected)) {
+      const info = getLocationInfo(key as PrivateEventLocationKey);
+      const std = info.pricing.standardTiers.map((t) => t.pricePerPerson);
+      const corp = info.pricing.corporateTiers.map((t) => t.pricePerPerson);
+      const min = minimumGroupSizeFor(info, "standard");
+      if (JSON.stringify(std) !== JSON.stringify(want.std)) {
+        throw new Error(`ASSERTION FAILED: ${key} standard tiers are ${std.join("/")}, expected ${want.std.join("/")} per shared.md.`);
+      }
+      if (JSON.stringify(corp) !== JSON.stringify(want.corp)) {
+        throw new Error(`ASSERTION FAILED: ${key} corporate tiers are ${corp.join("/")}, expected ${want.corp.join("/")} per shared.md.`);
+      }
+      if (min !== want.min) {
+        throw new Error(`ASSERTION FAILED: ${key} minimum group size is ${min}, expected ${want.min} per shared.md.`);
+      }
+    }
+    const sfRetail = getLocationInfo("san-francisco-bay" as PrivateEventLocationKey).pricing.fundraiserRetail;
+    if (sfRetail !== 50) {
+      throw new Error(`ASSERTION FAILED: San Francisco fundraiser retail is $${sfRetail}, expected $50 (its own standard 8-29 rate).`);
+    }
+    console.log(`\nRegression check passed: all ${Object.keys(expected).length} locations' pricing tables and minimums match shared.md.`);
+  }
 
   // --- Regression checks for the requester-name fix (2026-09-30, #81249) ---
   const nameLabel = "REGRESSION (#81249): the form name beats the name Zendesk invented, on PV's label-per-line form";
