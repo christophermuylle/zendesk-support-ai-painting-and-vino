@@ -999,6 +999,48 @@ async function main() {
   }
   console.log(String.fromCharCode(10) + "Regression check passed: reply-after-quote does not re-send the quote email.");
 
+  // --- Location keyword boundaries (2026-10-01) ---
+  // Location matching was a plain substring test until the comma-less state
+  // variants exposed it: "lakeside ca" matched "lakeside cabin", and
+  // "orange ca" would have matched "orange canvas". Each of those sends a
+  // real inquiry to the wrong market, and for two-key markets that is the
+  // wrong PRICE. keywordMatches() now requires whole-token matches.
+  {
+    const kwResolver = new LocationResolver(path.join(CONFIG_DIR, "locations.yaml"));
+    const slugFor = (text: string): string | null => {
+      const c: TicketContext = {
+        ticket: { ...scenarios[0].ctx.ticket, id: 91000, description: text, requester_id: CUSTOMER_ID },
+        requester: { id: CUSTOMER_ID, name: "T", email: "t@example.com" },
+        comments: [makeComment(text, CUSTOMER_ID)],
+        brand: "painting_and_vino",
+      };
+      const l = kwResolver.resolve(c);
+      return l ? l.slug : null;
+    };
+    const mustNotMatch = ["a lakeside cabin at dusk", "an alpine cabin scene", "an orange canvas", "the Westfield Inn"];
+    for (const text of mustNotMatch) {
+      const got = slugFor(text);
+      if (got !== null) {
+        throw new Error(`ASSERTION FAILED: "${text}" matched location "${got}". A city keyword must not match inside a longer word - that is how a quote goes out at another market's price.`);
+      }
+    }
+    const mustMatch: Array<[string, string]> = [
+      ["Location: Lakeside, CA", "san-diego"],
+      ["Location: Alpine, CA", "san-diego"],
+      ["Location: Orange, CA", "orange-county"],
+      ["Location: Chula Vista", "san-diego"],
+      ["Location: La Habra", "orange-county"],
+      ["Location: La Habra Heights", "los-angeles"],
+      ["Location: Chino Hills", "los-angeles"],
+      ["Location: Rolling Hills Estates", "los-angeles"],
+    ];
+    for (const [text, want] of mustMatch) {
+      const got = slugFor(text);
+      if (got !== want) throw new Error(`ASSERTION FAILED: "${text}" resolved to "${got}", expected "${want}".`);
+    }
+    console.log(`\nRegression check passed: location keywords match whole tokens only (${mustNotMatch.length} false positives blocked, ${mustMatch.length} real matches kept).`);
+  }
+
   // --- Per-location pricing table (2026-10-01) ---
   // San Francisco Bay Area had been using the DEFAULT tables, so every SF
   // quote went out $5/person light in both categories: #81445, #81426,

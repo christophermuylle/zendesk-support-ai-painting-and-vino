@@ -95,7 +95,7 @@ locations:
       "fountain valley", "fullerton", "garden grove", "huntington beach", "irvine", "la habra",
       "la palma", "laguna beach", "laguna hills", "laguna niguel", "laguna woods", "los alamitos",
       "mission viejo", "newport beach", "placentia", "rancho santa margarita", "san clemente",
-      "san juan capistrano", "santa ana", "seal beach", "tustin", "yorba linda", "brea, ca", "brea ca",
+      "san juan capistrano", "santa ana", "seal beach", "sunset beach", "tustin", "yorba linda", "brea, ca", "brea ca",
       "cypress, ca", "cypress ca", "lake forest, ca", "lake forest ca", "stanton, ca", "stanton ca",
       "villa park, ca", "villa park ca", "westminster, ca", "westminster ca", "orange, ca",
       "orange ca"
@@ -135,6 +135,43 @@ locations:
         "poway",
         "chula vista",
         "el cajon",
+        # The rest of San Diego County's 18 incorporated cities
+        # (Christopher, 2026-10-01). "coronado" is safe here even though
+        # Riverside's "corona, ca" looks similar - that keyword carries the
+        # comma, so neither city can steal the other's tickets, and san-diego
+        # is matched before riverside-county anyway.
+        "coronado",
+        "imperial beach",
+        "la mesa",
+        "lemon grove",
+        "national city",
+        "santee",
+        "solana beach",
+        # Comma-less twins for the two that were state-qualified. Same bug as
+        # the Indianapolis suburbs had: withStateAbbreviations turns "Vista
+        # California" into "vista ca" with no comma, so "vista, ca" alone
+        # could never match it.
+        "vista ca",
+        "san marcos ca",
+        # Unincorporated San Diego County communities (Christopher,
+        # 2026-10-01). Five of the eight are state-qualified: "alpine" and
+        # "lakeside" are landscape words that belong in painting titles,
+        # "julian" and "ramona" are first names and the form body carries the
+        # customer's own name, and "valley center" is generic enough to
+        # collide (there is one near Wichita, and we serve Kansas City).
+        "borrego springs",
+        "fallbrook",
+        "rancho santa fe",
+        "alpine, ca",
+        "alpine ca",
+        "julian, ca",
+        "julian ca",
+        "lakeside, ca",
+        "lakeside ca",
+        "ramona, ca",
+        "ramona ca",
+        "valley center, ca",
+        "valley center ca",
       ]
 
   - slug: san-francisco-bay
