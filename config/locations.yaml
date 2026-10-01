@@ -154,12 +154,15 @@ locations:
         "vista ca",
         "san marcos ca",
         # Unincorporated San Diego County communities (Christopher,
-        # 2026-10-01). Five of the eight are state-qualified: "alpine" and
+        # 2026-10-01). Borrego Springs is deliberately NOT here - it is ~90
+        # miles out in the desert past Julian, too far to quote at standard
+        # San Diego rates, so Christopher asked to leave it out. An inquiry
+        # from there matches nothing and goes to a human, which is the right
+        # outcome. Five of the remaining seven are state-qualified: "alpine" and
         # "lakeside" are landscape words that belong in painting titles,
         # "julian" and "ramona" are first names and the form body carries the
         # customer's own name, and "valley center" is generic enough to
         # collide (there is one near Wichita, and we serve Kansas City).
-        "borrego springs",
         "fallbrook",
         "rancho santa fe",
         "alpine, ca",
