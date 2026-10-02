@@ -1059,6 +1059,9 @@ async function main() {
       tucson:              { std: [45, 40, 35], corp: [50, 45, 40], min: 10 },
       sacramento:          { std: [45, 40, 35], corp: [50, 45, 40], min: 10 },
       "kansas-city":       { std: [39, 35, 30], corp: [44, 40, 35], min: 8 },
+      // Launched 2026-10-02. shared.md already had Phoenix on the default
+      // tables before it had a pricing key.
+      phoenix:             { std: [45, 40, 35], corp: [50, 45, 40], min: 8 },
     };
     for (const [key, want] of Object.entries(expected)) {
       const info = getLocationInfo(key as PrivateEventLocationKey);

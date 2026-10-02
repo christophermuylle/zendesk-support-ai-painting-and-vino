@@ -207,7 +207,8 @@ export type PrivateEventLocationKey =
   | "san-diego"
   | "san-francisco-bay"
   | "riverside-county"
-  | "kansas-city";
+  | "kansas-city"
+  | "phoenix";
 
 const LAUNCHED_LOCATION_KEYS: ReadonlySet<string> = new Set<PrivateEventLocationKey>([
   "tucson",
@@ -218,6 +219,10 @@ const LAUNCHED_LOCATION_KEYS: ReadonlySet<string> = new Set<PrivateEventLocation
   "san-francisco-bay",
   "riverside-county",
   "kansas-city",
+  // Launched 2026-10-02 on Christopher's go-ahead. Was "coming soon" since
+  // 2026-09-14; config/knowledge-base/locations/phoenix.md was rewritten in
+  // the same commit, because it told customers the location was not open.
+  "phoenix",
 ]);
 
 /** Returns the location key if this brand's private-event system has pricing for it (the 8 launched locations), or null (Phoenix, Chattanooga, or anything unmatched) - fails safe to human review rather than guessing. */
@@ -423,6 +428,26 @@ export const PRIVATE_EVENT_LOCATIONS: Record<PrivateEventLocationKey, PrivateEve
       fundraiserRetail: DEFAULT_FUNDRAISER_RETAIL,
       kidsPricePerPerson: KIDS_DEFAULT_PRICE,
     },
+    minimumGroupSize: DEFAULT_MINIMUM_GROUP_SIZE,
+  },
+  phoenix: {
+    displayName: "Phoenix, AZ",
+    // No venue list on file yet - same treatment as Orange County and San
+    // Diego, where the render function supplies the "we'll send a list of
+    // partners once we confirm which artist is available" fallback line
+    // rather than inventing a link.
+    venueLinks: [],
+    pricing: {
+      // shared.md: "San Diego, Orange County, Los Angeles, Sacramento,
+      // Riverside County/Temecula, Tucson, and Phoenix use 45/40/35" - so
+      // Phoenix was already on the default tables there before it had a key.
+      corporateTiers: DEFAULT_CORPORATE_TIERS,
+      standardTiers: DEFAULT_STANDARD_TIERS,
+      fundraiserRetail: DEFAULT_FUNDRAISER_RETAIL,
+      kidsPricePerPerson: KIDS_DEFAULT_PRICE,
+    },
+    // 8, confirmed by Christopher 2026-10-02. Only Tucson and Sacramento are
+    // at 10.
     minimumGroupSize: DEFAULT_MINIMUM_GROUP_SIZE,
   },
   "kansas-city": {
