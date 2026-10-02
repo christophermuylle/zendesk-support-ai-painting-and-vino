@@ -33,7 +33,25 @@ locations:
   - slug: phoenix
     display_name: "Phoenix, AZ"
     file: phoenix.md
-    match_keywords: ["phoenix"]
+    # Phoenix metro (Christopher, 2026-10-02). NOTE: phoenix is NOT in
+    # LAUNCHED_LOCATION_KEYS, so these towns make the ticket resolve to this
+    # knowledge-base file but a private-event inquiry still goes to a human -
+    # there is no Phoenix pricing key yet. See src/private-event-quotes.ts.
+    #
+    # Four names take the state, and two of them are not optional: this slug is
+    # matched BEFORE los-angeles in this file, and "glendale" and "arcadia" are
+    # both Los Angeles County cities. Bare, they would silently steal LA's
+    # tickets. "peoria" is far better known in Illinois, and "chandler" and
+    # "gilbert" are common personal names - the form body carries the
+    # customer's own name.
+    #
+    # The two districts are listed as districts, never bare: "biltmore" is an
+    # estate in North Carolina and a hotel chain, and bare "arcadia" is the LA
+    # city above.
+    match_keywords: ["phoenix", "scottsdale", "tolleson", "union hills", "fountain hills",
+      "tempe", "maricopa", "biltmore district", "arcadia district",
+      "glendale, az", "glendale az", "peoria, az", "peoria az",
+      "chandler, az", "chandler az", "gilbert, az", "gilbert az"]
 
   - slug: los-angeles
     display_name: "Los Angeles, CA"
