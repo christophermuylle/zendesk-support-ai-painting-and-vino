@@ -175,6 +175,27 @@ locations:
         "ramona ca",
         "valley center, ca",
         "valley center ca",
+        # San Diego NEIGHBOURHOODS, not cities (Christopher, 2026-10-02).
+        # Worth having even though "san diego" already covers anyone who names
+        # the city: a customer who writes only "Leucadia" or "Sorrento Valley"
+        # matched nothing before. Leucadia is in Encinitas; the rest are in the
+        # City of San Diego.
+        #
+        # "mira mar" is Christopher's spelling of Miramar - both forms here.
+        # Miramar, FL belongs to Wine and Canvas, a separate config, so they
+        # cannot collide.
+        "leucadia",
+        "miramar",
+        "mira mar",
+        "sorrento valley",
+        "fashion valley",
+        "downtown sd",
+        # Carmel Valley here is the San Diego neighbourhood. Note there is
+        # also a Carmel Valley in Monterey County, ~450 miles north - not a
+        # market we serve, so an inquiry from there would otherwise have gone
+        # to a human and will now be read as San Diego. Flagged to Christopher
+        # rather than left silent.
+        "carmel valley",
       ]
 
   - slug: san-francisco-bay
