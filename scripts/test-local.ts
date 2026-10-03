@@ -1062,6 +1062,9 @@ async function main() {
       // Launched 2026-10-02. shared.md already had Phoenix on the default
       // tables before it had a pricing key.
       phoenix:             { std: [45, 40, 35], corp: [50, 45, 40], min: 8 },
+      // Launched 2026-10-03. Minimum 8 is the default and is ASSUMED, not
+      // confirmed - see the note on this entry in private-event-quotes.ts.
+      chattanooga:         { std: [45, 40, 35], corp: [50, 45, 40], min: 8 },
     };
     for (const [key, want] of Object.entries(expected)) {
       const info = getLocationInfo(key as PrivateEventLocationKey);

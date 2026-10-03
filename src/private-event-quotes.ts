@@ -208,7 +208,8 @@ export type PrivateEventLocationKey =
   | "san-francisco-bay"
   | "riverside-county"
   | "kansas-city"
-  | "phoenix";
+  | "phoenix"
+  | "chattanooga";
 
 const LAUNCHED_LOCATION_KEYS: ReadonlySet<string> = new Set<PrivateEventLocationKey>([
   "tucson",
@@ -223,6 +224,8 @@ const LAUNCHED_LOCATION_KEYS: ReadonlySet<string> = new Set<PrivateEventLocation
   // 2026-09-14; config/knowledge-base/locations/phoenix.md was rewritten in
   // the same commit, because it told customers the location was not open.
   "phoenix",
+  // Launched 2026-10-03, same sequence as Phoenix the day before.
+  "chattanooga",
 ]);
 
 /** Returns the location key if this brand's private-event system has pricing for it (the 8 launched locations), or null (Phoenix, Chattanooga, or anything unmatched) - fails safe to human review rather than guessing. */
@@ -448,6 +451,27 @@ export const PRIVATE_EVENT_LOCATIONS: Record<PrivateEventLocationKey, PrivateEve
     },
     // 8, confirmed by Christopher 2026-10-02. Only Tucson and Sacramento are
     // at 10.
+    minimumGroupSize: DEFAULT_MINIMUM_GROUP_SIZE,
+  },
+  chattanooga: {
+    displayName: "Chattanooga, TN",
+    // No venue list on file yet - the render function supplies the "we'll
+    // send a list of partners once we confirm which artist is available"
+    // fallback rather than inventing a link.
+    venueLinks: [],
+    pricing: {
+      // The default tables. shared.md names Kansas City and San Francisco Bay
+      // as the only two locations with their own tiers, so Chattanooga sits in
+      // the default group with everywhere else.
+      corporateTiers: DEFAULT_CORPORATE_TIERS,
+      standardTiers: DEFAULT_STANDARD_TIERS,
+      fundraiserRetail: DEFAULT_FUNDRAISER_RETAIL,
+      kidsPricePerPerson: KIDS_DEFAULT_PRICE,
+    },
+    // 8 - the default, ASSUMED rather than confirmed. Christopher gave 8
+    // explicitly for Phoenix on 2026-10-02 but did not state one for
+    // Chattanooga; only Tucson and Sacramento are at 10. One line to change if
+    // Tennessee runs a different minimum.
     minimumGroupSize: DEFAULT_MINIMUM_GROUP_SIZE,
   },
   "kansas-city": {
