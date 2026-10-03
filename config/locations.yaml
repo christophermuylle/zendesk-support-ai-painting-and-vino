@@ -243,4 +243,21 @@ locations:
   - slug: chattanooga
     display_name: "Chattanooga, TN"
     file: chattanooga.md
-    match_keywords: ["chattanooga"]
+    # Chattanooga metro, spanning the TN/GA line (Christopher, 2026-10-03).
+    #
+    # NOTE: chattanooga is NOT in LAUNCHED_LOCATION_KEYS, so these towns make a
+    # ticket resolve to this knowledge-base file but a private-event inquiry
+    # still returns a null pricing key and goes to a human. chattanooga.md also
+    # still tells customers the location is coming soon. Both are deliberate
+    # until Christopher confirms Chattanooga is open - same sequence Phoenix
+    # went through on 2026-10-02 (97cb621).
+    #
+    # "east ridge" and "dalton" take their state. "east ridge" bare is a
+    # landscape phrase that belongs in a painting description, and "dalton" is
+    # a common surname while the form body carries the customer's own name.
+    # Note the two states differ: East Ridge is Tennessee, Dalton is Georgia,
+    # as are Ringgold, Fort Oglethorpe and Rossville.
+    match_keywords: ["chattanooga", "hixson", "collegedale", "ooltewah", "ringgold",
+      "fort oglethorpe", "soddy-daisy", "soddy daisy", "signal mountain", "east brainerd",
+      "rossville",
+      "east ridge, tn", "east ridge tn", "dalton, ga", "dalton ga"]
