@@ -17,9 +17,9 @@ import { LocationResolver } from "../src/locations.js";
 import { AiDrafter, type IAiDrafter } from "../src/ai.js";
 import type { IZendeskClient } from "../src/zendesk.js";
 import { processTicket } from "../src/pipeline.js";
-import type { ActionType, DraftResult, RuleDecision, TicketContext, ZendeskComment } from "../src/types.js";
+import type { ActionType, DraftResult, RuleDecision, TicketContext, ZendeskComment, PrivateEventCategory } from "../src/types.js";
 import { extractFormContactName, firstNameFromFullName, looksMachineDerivedName } from "../src/util.js";
-import { getLocationInfo, minimumGroupSizeFor, type PrivateEventLocationKey } from "../src/private-event-quotes.js";
+import { getLocationInfo, minimumGroupSizeFor, classifyPrivateEvent, type PrivateEventLocationKey } from "../src/private-event-quotes.js";
 
 const CONFIG_DIR = path.resolve(process.cwd(), "config");
 const sharedKnowledgeBase = fs.readFileSync(path.join(CONFIG_DIR, "knowledge-base", "shared.md"), "utf-8");
@@ -1039,6 +1039,49 @@ async function main() {
       if (got !== want) throw new Error(`ASSERTION FAILED: "${text}" resolved to "${got}", expected "${want}".`);
     }
     console.log(`\nRegression check passed: location keywords match whole tokens only (${mustNotMatch.length} false positives blocked, ${mustMatch.length} real matches kept).`);
+  }
+
+  // --- Category keywords must match whole tokens (2026-10-05) ---
+  // Audit prompted by Wine and Canvas's kids-template bug (#29784), which was
+  // a keyword matching more than it looked like it did. This brand had the
+  // same failure three times over, and "cause" matching "because" is the
+  // worst: ordinary writing like "I'm asking because..." was classified
+  // FUNDRAISER and sent donation mechanics to someone planning a birthday.
+  {
+    const classify = (text: string): PrivateEventCategory | null => {
+      const c: TicketContext = {
+        ticket: { ...scenarios[0].ctx.ticket, id: 91300, description: text, requester_id: CUSTOMER_ID },
+        requester: { id: CUSTOMER_ID, name: "T", email: "t@example.com" },
+        comments: [makeComment(text, CUSTOMER_ID)],
+        brand: "painting_and_vino",
+      };
+      return classifyPrivateEvent(c);
+    };
+    const misfires: Array<[string, string]> = [
+      ["I'm asking because we have 12 people", "cause/because"],
+      ["My husband will accompany me", "company/accompany"],
+      ["We are staffing it ourselves", "staff/staffing"],
+    ];
+    for (const [text, why] of misfires) {
+      const got = classify(text);
+      if (got !== null) throw new Error(`ASSERTION FAILED (${why}): "${text}" classified as "${got}", expected no category. A keyword matched inside a longer word.`);
+    }
+    const stillWorks: Array<[string, PrivateEventCategory]> = [
+      ["Tell us about your Event: we are fundraising for the team", "fundraiser"],
+      ["Tell us about your Event: raising donations for the shelter", "fundraiser"],
+      ["Tell us about your Event: to support our cause", "fundraiser"],
+      ["Tell us about your Event: our company event", "corporate"],
+      ["Tell us about your Event: a night out with coworkers", "corporate"],
+      ["Tell us about your Event: Small team building acitivity for the holiday season.", "corporate"],
+      ["Tell us about your Event: my kid's birthday", "kiddos"],
+      ["Tell us about your Event: Family birthday party. Attendee ages 9, 16, 21, 25, 52, 54, 69", "standard"],
+      ["Tell us about your Event: a few families getting together", "standard"],
+    ];
+    for (const [text, want] of stillWorks) {
+      const got = classify(text);
+      if (got !== want) throw new Error(`ASSERTION FAILED: "${text}" classified as "${got}", expected "${want}". Whole-token matching needs each inflected form spelled out in the keyword lists.`);
+    }
+    console.log(`\nRegression check passed: ${misfires.length} substring misfires blocked, ${stillWorks.length} real wordings still classify.`);
   }
 
   // --- Per-location pricing table (2026-10-01) ---

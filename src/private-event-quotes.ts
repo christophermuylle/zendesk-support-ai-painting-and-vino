@@ -41,7 +41,7 @@
 // the kids template here - see KIDS_KEYWORDS below.
 
 import type { TicketContext, PrivateEventCategory } from "./types.js";
-import { extractFormContactName, firstNameFromFullName, getTicketMatchText } from "./util.js";
+import { extractFormContactName, firstNameFromFullName, getTicketMatchText, keywordMatches } from "./util.js";
 
 // PrivateEventCategory ("fundraiser" | "kiddos" | "standard" | "corporate")
 // lives in types.ts, not here - it predates this file (originally used to
@@ -75,9 +75,32 @@ const CORPORATE_KEYWORDS = [
   "employees",
   "work event",
   "work party",
+  "employee",
+  "coworker",
 ];
 
-const FUNDRAISER_KEYWORDS = ["fundraiser", "charity", "nonprofit", "non-profit", "rescue", "donate", "donation", "cause"];
+// The inflected forms at the end were supplied accidentally by substring
+// matching. Now that this list is matched as whole tokens they must be
+// spelled out, or "donations" and "fundraising" would stop matching.
+const FUNDRAISER_KEYWORDS = [
+  "fundraiser",
+  "charity",
+  "nonprofit",
+  "non-profit",
+  "rescue",
+  "donate",
+  "donation",
+  "cause",
+  "fundraisers",
+  "fundraising",
+  "charities",
+  "nonprofits",
+  "rescues",
+  "donates",
+  "donating",
+  "donated",
+  "donations",
+];
 
 // Deliberately NOT including a bare "birthday" - see the file header note.
 // PV's "Kids' events" are ages 6+ children's parties, distinct from adult
@@ -112,10 +135,7 @@ const KIDS_AGE_PATTERN = /\b(?:turning\s+)?([4-9]|1[0-2])(?:st|nd|rd|th)?\s*[- ]
 // rather than merely unclassified. Added 2026-09-25 so the classifier can
 // tell those two apart; see the null return below.
 const STANDARD_KEYWORDS = [
-  // Community / neighbourhood events. Christopher's own test scenarios
-  // specify that an HOA or condo-association event is priced as STANDARD,
-  // not Corporate, despite the "association" wording - these keywords keep
-  // those quoting immediately instead of triggering a clarifying question.
+  "association",
   "hoa",
   "homeowners association",
   "homeowner's association",
@@ -151,6 +171,16 @@ const STANDARD_KEYWORDS = [
   "couples",
   "friends",
   "family",
+  "celebrations",
+  "celebrate",
+  "resident",
+  "couple",
+  "friend",
+  "families",
+  "neighborhoods",
+  "anniversaries",
+  "reunions",
+  "graduations",
 ];
 
 /**
@@ -169,19 +199,36 @@ const STANDARD_KEYWORDS = [
  * category's keywords match, including STANDARD_KEYWORDS above, we still
  * quote immediately and nobody gets an extra email.
  */
+/**
+ * WHOLE-TOKEN matching, not substring - keywordMatches(), not includes().
+ *
+ * With plain substring matching these lists misfired on ordinary English:
+ *   "cause"   matched "because"   -> any inquiry saying "because" was a FUNDRAISER
+ *   "company" matched "accompany" -> "my husband will accompany me" was CORPORATE
+ *   "staff"   matched "staffing"  -> "we are staffing it ourselves" was CORPORATE
+ *
+ * The first is the serious one. "because" is ordinary writing, and a false
+ * fundraiser sends donation mechanics to someone throwing a birthday party.
+ * Found 2026-10-05 auditing the categories after the kids-template bug
+ * (#29784) - the same root cause as that one: a keyword that matches far more
+ * than it looks like it does.
+ *
+ * Whole-token matching means inflections no longer come free, so "donations",
+ * "fundraising" and the rest are spelled out in the lists above.
+ */
 export function classifyPrivateEvent(ctx: TicketContext): PrivateEventCategory | null {
   const text = getTicketMatchText(ctx);
 
-  if (KIDS_KEYWORDS.some((k) => text.includes(k)) || KIDS_AGE_PATTERN.test(text)) {
+  if (KIDS_KEYWORDS.some((k) => keywordMatches(text, k)) || KIDS_AGE_PATTERN.test(text)) {
     return "kiddos";
   }
-  if (FUNDRAISER_KEYWORDS.some((k) => text.includes(k))) {
+  if (FUNDRAISER_KEYWORDS.some((k) => keywordMatches(text, k))) {
     return "fundraiser";
   }
-  if (CORPORATE_KEYWORDS.some((k) => text.includes(k))) {
+  if (CORPORATE_KEYWORDS.some((k) => keywordMatches(text, k))) {
     return "corporate";
   }
-  if (STANDARD_KEYWORDS.some((k) => text.includes(k))) {
+  if (STANDARD_KEYWORDS.some((k) => keywordMatches(text, k))) {
     return "standard";
   }
   return null;
