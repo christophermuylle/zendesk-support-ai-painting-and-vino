@@ -25,18 +25,40 @@ and Rossville (Christopher, 2026-10-03). The metro straddles the state line -
 East Ridge and Signal Mountain are Tennessee; Ringgold, Fort Oglethorpe,
 Dalton and Rossville are Georgia.
 
+## Booking
+Direct link: https://paintingandvino.com/chattanooga-paint-and-sip/
+
+Each event has its own registration page off that calendar. src/followups.ts
+reads the "Direct link:" line above to put a calendar link in the 120-hour
+follow-up email.
+
+## Venues (from the location page, 2026-10-05 - always confirm the specific
+## one on the event listing)
+- Amada Tapas & Wine, 1413 Chestnut St., Chattanooga, TN 37402
+- Fifty Fifty Wine and Martini Bar, 43 Station St, Chattanooga, TN 37408
+- Hutton & Smith Brewing, 431 E M L King Blvd #120, Chattanooga, TN 37403
+- The Tap House, Chattanooga
+
+These are venues the public classes run at, not a vetted partner list for
+private events, so do not send them as "our partner venue list". They are
+fine to mention by name if a customer asks what sort of spaces we work with.
+
+## Public classes
+Listed at $39 per ticket on the location page as of 2026-10-05. Private
+events are quoted separately from shared.md's table - do not use $39 as a
+private-event rate.
+
 ## Not yet on file
 Do not invent these - say we will confirm, and flag to Christopher:
 
-- No partner venue list. If a customer needs a space, use the standard line
-  about sending a partner list once the artist is confirmed.
-- No "Direct link:" booking URL. src/followups.ts reads that line to put a
-  calendar link in the 120-hour follow-up email; without it that email still
-  sends, just without the link.
+- No partner venue LIST of the kind the other cities have (a Google Drive
+  document). The named venues above are not a substitute. Until there is one,
+  the private-event quote uses its standard fallback line about sending a
+  partner list once the artist is confirmed - which is correct, not a bug.
 - No project/pricing sheet of the kind Tucson has.
 - Travel fee: nothing specific on file, so use the general "a travel fee may
   apply outside the greater city limits" line. Worth pinning down given the
-  metro crosses into Georgia.
+  metro crosses into Georgia and Dalton is ~30 miles out.
 
 ## Public classes
 Still unconfirmed - this launch is private events only. If a customer asks
