@@ -367,6 +367,24 @@ const HIGHER_MINIMUM_LOCATIONS: ReadonlySet<PrivateEventLocationKey> = new Set([
 const HIGHER_MINIMUM_GROUP_SIZE = 10;
 const FUNDRAISER_MINIMUM_GROUP_SIZE = 12;
 
+// Lead Bros is a paid lead-gen source. Its inquiries arrive through the same
+// form as everything else, so the BODY is indistinguishable from a regular
+// inquiry - the only thing that marks them is the subject line, which the
+// source sets to "New Private Event Inquiry (Lead Bros)". Christopher,
+// 2026-10-11: these quote at a 10-person minimum regardless of location.
+// Matching on the subject alone is what keeps regular inquiries untouched.
+const LEAD_BROS_MINIMUM_GROUP_SIZE = 10;
+/** Both brands' markers, so either feed naming works on either brand. */
+const LEAD_BROS_SUBJECT_MARKERS = ["lead bros", "(lb)"];
+
+/** True when this ticket came in through the Lead Bros feed. Subject only - a
+ * customer writing "lead bros" in the body of a normal inquiry is not one, and
+ * "Re: New Private Event Inquiry (Lead Bros)" on a reply still is. */
+export function isLeadBrosInquiry(ctx: TicketContext): boolean {
+  const subject = (ctx.ticket.subject ?? "").toLowerCase();
+  return LEAD_BROS_SUBJECT_MARKERS.some((m) => subject.includes(m));
+}
+
 export interface VenueLink {
   label: string;
   url: string;
@@ -539,8 +557,16 @@ export function getLocationInfo(key: PrivateEventLocationKey): PrivateEventLocat
 }
 
 /** The minimum group size to quote for a given category at this location - fundraisers use the company-wide 12-person minimum regardless of location. */
-export function minimumGroupSizeFor(loc: PrivateEventLocationInfo, category: PrivateEventCategory): number {
-  return category === "fundraiser" ? FUNDRAISER_MINIMUM_GROUP_SIZE : loc.minimumGroupSize;
+export function minimumGroupSizeFor(
+  loc: PrivateEventLocationInfo,
+  category: PrivateEventCategory,
+  leadBros = false
+): number {
+  const base = category === "fundraiser" ? FUNDRAISER_MINIMUM_GROUP_SIZE : loc.minimumGroupSize;
+  // Math.max, not a replacement: the Lead Bros floor must never LOWER a
+  // minimum. Tucson and Sacramento already sit at 10, and fundraisers stay on
+  // the company-wide 12 everywhere.
+  return leadBros ? Math.max(base, LEAD_BROS_MINIMUM_GROUP_SIZE) : base;
 }
 
 // ---------------------------------------------------------------------------
@@ -607,6 +633,18 @@ function toHtml(plainBody: string, links: VenueLink[]): string {
 
 const SIGN_OFF = ["Cheers,", "", "Bonnie Davila", "Private Event Coordinator, Painting & Vino"];
 
+/** The first pricing tier is written as "8-29" in the tier tables, but the
+ * quote must not advertise a band that starts below the minimum we are
+ * actually quoting - Tucson and Sacramento have always been 10-guest markets,
+ * and Lead Bros inquiries are 10 everywhere. Rewrites the lower bound of the
+ * first band to the effective minimum and leaves every later band alone
+ * ("30-49", "50+" are unaffected). A band whose lower bound already matches,
+ * or that has no leading number, is returned untouched. */
+function tierRangeForDisplay(range: string, index: number, minimum: number): string {
+  if (index !== 0) return range;
+  return range.replace(/^\d+/, String(minimum));
+}
+
 export function renderPrivateEventQuote(
   ctx: TicketContext,
   category: PrivateEventCategory,
@@ -614,17 +652,18 @@ export function renderPrivateEventQuote(
 ): RenderedQuote {
   const loc = getLocationInfo(locationKey);
   const firstName = getFirstName(ctx);
+  const leadBros = isLeadBrosInquiry(ctx);
 
   switch (category) {
     case "corporate":
-      return renderCorporateOrStandard(loc, locationKey, firstName, "corporate");
+      return renderCorporateOrStandard(loc, locationKey, firstName, "corporate", leadBros);
     case "fundraiser":
-      return renderFundraiser(loc, locationKey, firstName);
+      return renderFundraiser(loc, locationKey, firstName, leadBros);
     case "kiddos":
-      return renderKids(loc, locationKey, firstName);
+      return renderKids(loc, locationKey, firstName, leadBros);
     case "standard":
     default:
-      return renderCorporateOrStandard(loc, locationKey, firstName, "standard");
+      return renderCorporateOrStandard(loc, locationKey, firstName, "standard", leadBros);
   }
 }
 
@@ -637,10 +676,11 @@ function renderCorporateOrStandard(
   loc: PrivateEventLocationInfo,
   locationKey: PrivateEventLocationKey,
   firstName: string,
-  category: "corporate" | "standard"
+  category: "corporate" | "standard",
+  leadBros = false
 ): RenderedQuote {
   const tiers = category === "corporate" ? loc.pricing.corporateTiers : loc.pricing.standardTiers;
-  const minimum = minimumGroupSizeFor(loc, category);
+  const minimum = minimumGroupSizeFor(loc, category, leadBros);
   const opener =
     category === "corporate"
       ? `Thank you for reaching out about a corporate event with Painting and Vino — we'd love to help make it a memorable one for your team!`
@@ -657,7 +697,7 @@ function renderCorporateOrStandard(
     ``,
     `Pricing for ${loc.displayName} (per person, 3-hour event, standard 16x20 canvas):`,
     `Minimum group size: ${minimum} guests`,
-    `${tiers.map((t) => `$${t.pricePerPerson}/person (${t.range} guests)`).join(", ")}`,
+    `${tiers.map((t, i) => `$${t.pricePerPerson}/person (${tierRangeForDisplay(t.range, i, minimum)} guests)`).join(", ")}`,
     `Please note: a travel fee may apply outside the greater city limits — we'll confirm before your date is locked in.`,
     ``,
     `A deposit locks in your date — it covers 2 seats or 20% of your expected headcount, whichever is higher. It's non-refundable but transferable to a future date for up to one year. The remaining balance is due the day before your event. Up to 3 no-shows can still be refunded or credited off the final invoice, as long as your group stays at or above the ${minimum}-guest minimum.`,
@@ -673,10 +713,10 @@ function renderCorporateOrStandard(
   return { category, locationKey, plainBody, htmlBody };
 }
 
-function renderFundraiser(loc: PrivateEventLocationInfo, locationKey: PrivateEventLocationKey, firstName: string): RenderedQuote {
+function renderFundraiser(loc: PrivateEventLocationInfo, locationKey: PrivateEventLocationKey, firstName: string, leadBros = false): RenderedQuote {
   const retail = loc.pricing.fundraiserRetail;
   const keep = retail - FUNDRAISER_DISCOUNT;
-  const minimum = FUNDRAISER_MINIMUM_GROUP_SIZE;
+  const minimum = minimumGroupSizeFor(loc, "fundraiser", leadBros);
 
   const plainBody = joinLines([
     `Hi ${firstName},`,
@@ -706,12 +746,12 @@ function renderFundraiser(loc: PrivateEventLocationInfo, locationKey: PrivateEve
   return { category: "fundraiser", locationKey, plainBody, htmlBody };
 }
 
-function renderKids(loc: PrivateEventLocationInfo, locationKey: PrivateEventLocationKey, firstName: string): RenderedQuote {
+function renderKids(loc: PrivateEventLocationInfo, locationKey: PrivateEventLocationKey, firstName: string, leadBros = false): RenderedQuote {
   const price = loc.pricing.kidsPricePerPerson;
   // shared.md doesn't state a separate minimum for Kids' events - using
   // this location's general private-event minimum as a reasonable
   // default (flagged, same as Wine and Canvas's INFERRED pricing notes).
-  const minimum = loc.minimumGroupSize;
+  const minimum = minimumGroupSizeFor(loc, "kiddos", leadBros);
 
   const plainBody = joinLines([
     `Hi ${firstName},`,
