@@ -24,6 +24,7 @@ import {
   PRIVATE_EVENT_INTERNAL_SENDER_ADDRESSES,
   PRIVATE_EVENT_REPLY_AFTER_QUOTE_TAG,
   OUTBOUND_THREAD_TAG,
+  PRIVATE_EVENT_BELOW_MINIMUM_TAG,
 } from "./config.js";
 import type { DraftResult, RuleDecision, TicketContext } from "./types.js";
 import {
@@ -34,8 +35,16 @@ import {
   looksMachineDerivedName,
   looksLikePrivateEventFormSubmission,
   isInternalBrandSender,
+  extractGuestCount,
+  extractCalendarLink,
 } from "./util.js";
-import { classifyPrivateEvent, renderPrivateEventQuote, resolvePrivateEventLocationKey } from "./private-event-quotes.js";
+import { classifyPrivateEvent, renderPrivateEventQuote, resolvePrivateEventLocationKey,
+  renderBelowMinimumReply,
+  minimumGroupSizeFor,
+  isLeadBrosInquiry,
+  getLocationInfo,
+  getFirstName,
+} from "./private-event-quotes.js";
 import { renderClarifier, type ClarifierKind } from "./private-event-clarifiers.js";
 
 export interface PipelineResult {
@@ -62,6 +71,7 @@ export interface PipelineResult {
     | "licensee_received_confirmed_resolved"
     | "private_event_needs_location"
     | "private_event_clarification_sent"
+  | "private_event_below_minimum"
     | "private_event_held_not_form"
     | "private_event_self_managed_location"
     | "no_op";
@@ -618,6 +628,49 @@ export async function processTicket(deps: PipelineDeps, ticketId: number): Promi
         ruleDecision,
         matchedLocation: location?.displayName ?? null,
         finalAction: "private_event_clarification_sent",
+        mode: deps.mode,
+      };
+    }
+
+    // Below the group minimum: point them at public classes instead of
+    // quoting a private party they cannot book. Wine and Canvas #30268
+    // (2026-10-12): a form saying "Guests: 2" / "Romantic Date" was sent the
+    // full private-event quote anyway - two minutes after a human had already
+    // told her privates start at 8 - then chased twice by the follow-up sweep.
+    // Nothing in this branch read the guest count; digest.ts parsed it for
+    // display only.
+    //
+    // Deliberately does NOT set PRIVATE_EVENT_QUOTE_SENT_TAG: no quote went
+    // out, so there is nothing for the follow-up sequence to follow up on.
+    // Only fires on a definite number from the ORIGINAL form - no number, or
+    // a count at or above the minimum, behaves exactly as before.
+    const guestCount = extractGuestCount(ctx.ticket.description);
+    const groupMinimum = minimumGroupSizeFor(getLocationInfo(locationKey), category, isLeadBrosInquiry(ctx));
+    if (guestCount !== null && guestCount < groupMinimum) {
+      const snippet = deps.loadLocationSnippet(location!.file);
+      const belowMin = renderBelowMinimumReply(
+        getFirstName(ctx),
+        location!.displayName,
+        snippet ? extractCalendarLink(snippet) : null,
+        groupMinimum,
+        guestCount
+      );
+      await deps.zendesk.postComment(ticketId, belowMin.plainBody, {
+        isPublic: true,
+        status: "pending",
+        htmlBody: belowMin.htmlBody,
+        addTags: [
+          ...(ruleDecision.addTags ?? []),
+          PRIVATE_EVENT_BELOW_MINIMUM_TAG,
+          `${PRIVATE_EVENT_LOCATION_TAG_PREFIX}${locationKey}`,
+        ],
+        fields: [{ id: ORDER_CONFIRMATION_FIELD_ID, value: PRIVATE_EVENT_FIELD_VALUE }],
+      });
+      return {
+        ticketId,
+        ruleDecision,
+        matchedLocation: location!.displayName,
+        finalAction: "private_event_below_minimum",
         mode: deps.mode,
       };
     }

@@ -631,7 +631,7 @@ function toHtml(plainBody: string, links: VenueLink[]): string {
   return `<p>${html}</p>`;
 }
 
-const SIGN_OFF = ["Cheers,", "", "Bonnie Davila", "Private Event Coordinator, Painting & Vino"];
+const SIGN_OFF = ["Cheers,", "", "Raimey Williams", "Private Event Coordinator, Painting & Vino"];
 
 /** The first pricing tier is written as "8-29" in the tier tables, but the
  * quote must not advertise a band that starts below the minimum we are
@@ -643,6 +643,47 @@ const SIGN_OFF = ["Cheers,", "", "Bonnie Davila", "Private Event Coordinator, Pa
 function tierRangeForDisplay(range: string, index: number, minimum: number): string {
   if (index !== 0) return range;
   return range.replace(/^\d+/, String(minimum));
+}
+
+/**
+ * Reply for a party smaller than the group minimum: point them at public
+ * classes instead of quoting a private event they cannot book.
+ *
+ * Wording follows Raimey's own hand-written reply on Wine and Canvas #30268
+ * ("Since it's just the two of you, one of our public paint and sip classes
+ * would be a great fit. Private parties start at 8 guests...") rather than
+ * inventing a tone. Where a market has no calendar page on file, falls back to
+ * the email address rather than guessing a link.
+ */
+export function renderBelowMinimumReply(
+  firstName: string,
+  locationDisplayName: string | null,
+  calendarLink: string | null,
+  minimum: number,
+  guests: number
+): { plainBody: string; htmlBody: string } {
+  const groupPhrase = guests === 2 ? "just the two of you" : `a group of ${guests}`;
+  const browseLabel = locationDisplayName
+    ? `Browse upcoming classes in ${locationDisplayName}`
+    : "Browse upcoming classes";
+  const lines: Array<string | null> = [
+    `Hi ${firstName},`,
+    ``,
+    `What a fun idea! Since it's ${groupPhrase}, one of our public paint and sip classes would be a great fit — you get the same artist-led, step-by-step painting experience, and there's no minimum.`,
+    ``,
+    `Private parties start at ${minimum} guests, so a public class is the easier way to go for a smaller group.`,
+    ``,
+    calendarLink
+      ? `${browseLabel}: ${calendarLink}`
+      : `${browseLabel} — email events@paintingandvino.com and we'll send you the current schedule.`,
+    ``,
+    `If your plans grow and you end up with ${minimum} or more, just reply here and I'll put a private quote together.`,
+    ``,
+    ...SIGN_OFF,
+  ];
+  const plainBody = joinLines(lines);
+  const links: VenueLink[] = calendarLink ? [{ label: browseLabel, url: calendarLink }] : [];
+  return { plainBody, htmlBody: toHtml(plainBody, links) };
 }
 
 export function renderPrivateEventQuote(

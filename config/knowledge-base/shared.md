@@ -218,7 +218,7 @@ are their own category, not Standard or Corporate:
 > you.
 >
 > Thank you,
-> Bonnie Davila
+> Raimey Williams
 > events@paintingandvino.com
 > Private Events Coordinator
 
@@ -307,7 +307,7 @@ kids' parties are their own category, same as fundraisers:
 > count, and city, and I'll get a firmed-up quote over to you.
 >
 > Cheers,
-> Bonnie Davila
+> Raimey Williams
 > Private Event Coordinator
 > Painting & Vino
 
@@ -394,7 +394,7 @@ the bracketed placeholders):
 > know a good time for a call — I'm happy to walk you through it.
 >
 > Cheers,
-> Bonnie Davila
+> Raimey Williams
 > Private Event Coordinator, Painting & Vino
 
 Fill the placeholders like this:
@@ -468,10 +468,10 @@ using the Corporate/Business pricing column:
 5. Mention other project options are available on request (glass
    painting, tote bags, wood signs, pet portraits, etc.)
 6. Invite them to reply or schedule a call to lock in the date, and sign
-   off "Bonnie Davila, Private Event Coordinator, Painting & Vino" -
+   off "Raimey Williams, Private Event Coordinator, Painting & Vino" -
    matching how the team's own macros are always signed regardless of who
    actually sends them (every AI draft is held for human review before
-   sending anyway, so this matches what Bonnie would sign herself).
+   sending anyway, so this matches what the coordinator would sign).
 
 **Pricing (per person, 3-hour event, standard 16x20 canvas) - three
 separate tables, one per location group. Confirm which group the matched

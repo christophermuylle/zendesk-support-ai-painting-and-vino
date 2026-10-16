@@ -44,7 +44,7 @@ const FOCUS_OPTIONS = [
   "Fundraiser \u2014 school, nonprofit, or charity",
 ];
 
-const SIGN_OFF = ["Cheers,", "", "Bonnie Davila", "Private Event Coordinator, Painting & Vino"];
+const SIGN_OFF = ["Cheers,", "", "Raimey Williams", "Private Event Coordinator, Painting & Vino"];
 
 const OPENING = (first: string) => [
   `Hi ${first},`,

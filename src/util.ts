@@ -377,3 +377,43 @@ export function keywordMatches(text: string, keyword: string): boolean {
   }
   return re.test(text);
 }
+
+/**
+ * The guest count the customer typed on the private-event form, or null when
+ * the form carried no definite number.
+ *
+ * Read from the ORIGINAL form submission only, never the whole thread: our own
+ * quote text says "8-29 guests", and a customer quoting it back would otherwise
+ * be parsed as an 8-guest party. Same two patterns digest.ts already uses.
+ *
+ * A range ("20-30") yields its lower bound, the conservative read for a
+ * minimum check. Added 2026-10-16 after Wine and Canvas #30268, where a form
+ * saying "Guests: 2" / "Romantic Date" was sent the full private-event quote.
+ */
+export function extractGuestCount(formBody: string | null | undefined): number | null {
+  const text = formBody ?? "";
+  for (const re of [/number of expected guests\s*\**\s*(\d{1,4})/i, /guests?:?\s*\**\s*(\d{1,4})/i]) {
+    const m = text.match(re);
+    if (m) {
+      const n = Number(m[1]);
+      if (Number.isFinite(n) && n > 0) return n;
+    }
+  }
+  return null;
+}
+
+/**
+ * Extracts the "Direct link: <url>" line already on file in a location's
+ * knowledge-base snippet - never invents one.
+ *
+ * Requires an actual http(s) URL. The old /(\S+)/ form matched the PROSE in
+ * phoenix.md - `- No "Direct link:" booking URL.` - and captured the closing
+ * quote character, so email 3 for Phoenix went out with <a href="&quot;">.
+ * Found 2026-10-16 while wiring the below-minimum reply through the same
+ * helper. A location that genuinely has no calendar page returns null and the
+ * caller falls back to its no-link wording.
+ */
+export function extractCalendarLink(snippet: string): string | null {
+  const m = snippet.match(/Direct link:\s*(https?:\/\/\S+)/i);
+  return m ? m[1] : null;
+}

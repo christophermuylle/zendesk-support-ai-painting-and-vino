@@ -33,6 +33,7 @@
 import type { IZendeskClient } from "./zendesk.js";
 import type { LocationResolver } from "./locations.js";
 import { loadLocationSnippet } from "./config.js";
+import { extractCalendarLink } from "./util.js";
 import {
   PRIVATE_EVENT_QUOTE_SENT_TAG,
   PRIVATE_EVENT_REPLY_AFTER_QUOTE_TAG,
@@ -84,12 +85,6 @@ function eventCategoryFromTags(tags: string[]): PrivateEventCategory | null {
 function locationSlugFromTags(tags: string[]): string | null {
   const t = tags.find((tag) => tag.startsWith(PRIVATE_EVENT_LOCATION_TAG_PREFIX));
   return t ? t.slice(PRIVATE_EVENT_LOCATION_TAG_PREFIX.length) : null;
-}
-
-/** Extracts the "Direct link: <url>" line already on file in a location's knowledge-base snippet - never invents one. */
-function extractCalendarLink(snippet: string): string | null {
-  const m = snippet.match(/Direct link:\s*(\S+)/);
-  return m ? m[1] : null;
 }
 
 /** Which stage (1, 2, or 3) is next for this ticket, or null if all three have already been sent. */
