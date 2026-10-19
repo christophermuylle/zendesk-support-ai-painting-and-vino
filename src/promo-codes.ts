@@ -37,7 +37,13 @@ import crypto from "node:crypto";
 
 export interface PromoCodeConfig {
   spreadsheetId: string;
-  sheetName: string;
+  /**
+   * The tab (not file) name holding the codes, if it was pinned via
+   * GOOGLE_SHEETS_PROMO_SHEET_NAME. Normally null: resolveSheetName() asks
+   * the spreadsheet what its tabs are actually called. See the 2026-10-19
+   * note on resolveSheetName for why guessing "Sheet1" was a bug.
+   */
+  sheetName: string | null;
   serviceAccountEmail: string;
   privateKey: string;
 }
@@ -51,7 +57,7 @@ export function loadPromoCodeConfig(): PromoCodeConfig | null {
     // Confirmed sheet, shared by Jessica, linked by Christopher 2026-09-18 -
     // overridable via env if the codes ever move to a different sheet.
     spreadsheetId: process.env.GOOGLE_SHEETS_PROMO_SPREADSHEET_ID ?? "1AixKYtV9Zo2mr-p559yK0tViesPSPIFBHbZv9P0xggE",
-    sheetName: process.env.GOOGLE_SHEETS_PROMO_SHEET_NAME ?? "Sheet1",
+    sheetName: process.env.GOOGLE_SHEETS_PROMO_SHEET_NAME ?? null,
     serviceAccountEmail,
     // Env vars can't hold real newlines cleanly - the downloaded JSON key's
     // private_key has embedded `\n`, which becomes the literal two
@@ -116,14 +122,61 @@ async function sheetsRequest<T>(cfg: PromoCodeConfig, path: string, init: Reques
     },
   });
   if (!res.ok) {
-    throw new Error(`Google Sheets API ${init.method ?? "GET"} ${path} failed: ${res.status} ${await res.text().catch(() => "")}`);
+    throw new Error(
+      `Google Sheets API ${init.method ?? "GET"} ${path} on spreadsheet ${cfg.spreadsheetId} ` +
+        `failed: ${res.status} ${await res.text().catch(() => "")}`
+    );
   }
   return (await res.json()) as T;
 }
 
+// Keyed by spreadsheet id, so pointing GOOGLE_SHEETS_PROMO_SPREADSHEET_ID at
+// a different file can't be answered out of the previous file's cache.
+const cachedSheetNames = new Map<string, string>();
+
+/**
+ * Returns the name of the tab the codes live on.
+ *
+ * This used to default to "Sheet1", which is what a brand-new Google Sheet
+ * calls its first tab - but this sheet's tab is named "Painting and Vino
+ * Codes", so every request asked for the range `Sheet1!A:A` and Google
+ * answered 400 "Unable to parse range". That threw out of claimNextCode and,
+ * until 1b5a348, vanished into the sweep's error list, so email 3 silently
+ * stopped going out after 2026-10-12 (PV #81753, #81756, #81788, #81874,
+ * #81880). Wine & Canvas was unaffected only because its three code sheets
+ * happen to still have their tabs named "Sheet1" - same service account,
+ * same code, different tab name.
+ *
+ * So: ask the spreadsheet. GOOGLE_SHEETS_PROMO_SHEET_NAME still wins when
+ * it names a tab that actually exists; otherwise the first tab is used, and
+ * renaming the tab can never break this again.
+ */
+async function resolveSheetName(cfg: PromoCodeConfig): Promise<string> {
+  const cached = cachedSheetNames.get(cfg.spreadsheetId);
+  if (cached) return cached;
+  const meta = await sheetsRequest<{ sheets?: { properties?: { title?: string } }[] }>(
+    cfg,
+    "?fields=sheets.properties.title"
+  );
+  const titles = (meta.sheets ?? []).map((sh) => sh.properties?.title).filter((t): t is string => Boolean(t));
+  if (titles.length === 0) {
+    throw new Error(`Google Sheet ${cfg.spreadsheetId} reported no tabs - cannot locate the promo code column.`);
+  }
+  if (cfg.sheetName && !titles.includes(cfg.sheetName)) {
+    console.warn(
+      `[promo-codes] GOOGLE_SHEETS_PROMO_SHEET_NAME is "${cfg.sheetName}" but spreadsheet ` +
+        `${cfg.spreadsheetId} has no such tab (it has: ${titles.join(", ")}). Using "${titles[0]}".`
+    );
+  }
+  const resolved = cfg.sheetName && titles.includes(cfg.sheetName) ? cfg.sheetName : titles[0];
+  cachedSheetNames.set(cfg.spreadsheetId, resolved);
+  return resolved;
+}
+
 /** Reads the current pool (column A, no header row), top to bottom, blanks filtered out. */
 async function readCodes(cfg: PromoCodeConfig): Promise<string[]> {
-  const range = encodeURIComponent(`${cfg.sheetName}!A:A`);
+  const sheetName = await resolveSheetName(cfg);
+  const range = encodeURIComponent(`${sheetName}!A:A`);
   const data = await sheetsRequest<{ values?: string[][] }>(cfg, `/values/${range}`);
   return (data.values ?? []).map((row) => row[0]?.trim()).filter((v): v is string => Boolean(v));
 }
@@ -140,12 +193,13 @@ export async function claimNextCode(cfg: PromoCodeConfig): Promise<string | null
   const codes = await readCodes(cfg);
   if (codes.length === 0) return null;
 
+  const sheetName = await resolveSheetName(cfg);
   const [claimed, ...remaining] = codes;
-  const range = encodeURIComponent(`${cfg.sheetName}!A1:A${codes.length}`);
+  const a1 = `${sheetName}!A1:A${codes.length}`;
   const values = [...remaining.map((c) => [c]), [""]]; // pad with one blank row to overwrite the old last cell
-  await sheetsRequest(cfg, `/values/${range}?valueInputOption=RAW`, {
+  await sheetsRequest(cfg, `/values/${encodeURIComponent(a1)}?valueInputOption=RAW`, {
     method: "PUT",
-    body: JSON.stringify({ range: `${cfg.sheetName}!A1:A${codes.length}`, majorDimension: "ROWS", values }),
+    body: JSON.stringify({ range: a1, majorDimension: "ROWS", values }),
   });
   return claimed;
 }
