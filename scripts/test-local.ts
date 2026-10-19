@@ -1010,6 +1010,20 @@ Instagram`,
       brand: "painting_and_vino",
     },
   },
+  {
+    label: "REGRESSION (#30357/#30413): a generic contact-form inquiry must be flagged for a human",
+    ctx: {
+      ticket: {
+        id: 30413, subject: "New submission from Contact Us",
+        description: "Name Judy Jiang\nEmail judy@example.com\nPhone (270) 227-4648\nHow may we help you? (Please include; event name, date, etc...)\nHi there! I know this is short notice but what is the cost for a group and do you have availability?",
+        status: "new", requester_id: CUSTOMER_ID, tags: [],
+        created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Contact Former", email: "cf@example.com" },
+      comments: [makeComment("Name Judy Jiang\nEmail judy@example.com\nPhone (270) 227-4648\nHow may we help you? (Please include; event name, date, etc...)\nHi there! I know this is short notice but what is the cost for a group and do you have availability?", CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
 ];
 
 async function main() {
@@ -1128,6 +1142,15 @@ async function main() {
       ["Tell us about your Event: Small team building acitivity for the holiday season.", "corporate"],
       ["Tell us about your Event: my kid's birthday", "kiddos"],
       ["Tell us about your Event: Family birthday party. Attendee ages 9, 16, 21, 25, 52, 54, 69", "standard"],
+      // Age RANGES and plurals - how people describe a GROUP of children
+      // rather than one birthday child (mirrors Wine and Canvas #30423).
+      // PV caps the kids range at 12, so a teen range stays out.
+      ["Tell us about your Event: Girls and boys ages 7-9 with a few adults", "kiddos"],
+      ["Tell us about your Event: ages 7-9", "kiddos"],
+      ["Tell us about your Event: a bunch of 8 year olds", "kiddos"],
+      ["Tell us about your Event: 7-9 year olds", "kiddos"],
+      ["Tell us about your Event: ages 21-30 bachelorette", "standard"],
+      ["Tell us about your Event: ages 14-17 high school group", null as unknown as PrivateEventCategory],
       ["Tell us about your Event: a few families getting together", "standard"],
     ];
     for (const [text, want] of stillWorks) {
@@ -1415,6 +1438,23 @@ async function main() {
     );
   }
   console.log("Regression check passed: only form submissions are answered automatically; free-form email is held for a human.");
+
+  // --- Generic contact-form inquiries (#30357 / #30413, 2026-10-16) ---
+  const cfLabel = "REGRESSION (#30357/#30413): a generic contact-form inquiry must be flagged for a human";
+  const cf = resultsByLabel.get(cfLabel);
+  if (!cf) throw new Error(`ASSERTION FAILED: scenario "${cfLabel}" did not run`);
+  if (cf.ruleDecision.matchedRule !== "contact_form_inquiry") {
+    throw new Error(
+      `ASSERTION FAILED: a contact-form inquiry matched "${cf.ruleDecision.matchedRule}" instead of ` +
+        `contact_form_inquiry. general_faq matches the bare word "location", which is a field label on ` +
+        `every one of these forms, and swallows them with no reply and no needs_human.`
+    );
+  }
+  if (!(cf.ruleDecision.addTags ?? []).includes("needs_human")) {
+    throw new Error(`ASSERTION FAILED: a contact-form inquiry must be tagged needs_human.`);
+  }
+  console.log("Regression check passed: generic contact-form inquiries are flagged for a human, not silently FAQ-tagged (#30357, #30413).");
+
 
   // --- Below the group minimum (#30268, 2026-10-12) ---
   const smallLabel = "REGRESSION (#30268): a party under the group minimum gets public classes, not a quote";

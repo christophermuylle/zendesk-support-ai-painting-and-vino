@@ -280,6 +280,28 @@ rules:
     force_human_review: false
     add_tags: ["faq_auto_answered", "booking_question"]
 
+  # A human used the generic "Contact Us" form rather than the private-event
+  # form. Anything reaching this far is NOT a private-event inquiry
+  # (event_booking_question runs well above) and not a sign-up question - it
+  # is a person who typed a message and expects an answer.
+  #
+  # Added 2026-10-16, mirroring Wine and Canvas. Without it these fell through
+  # to general_faq, whose bare "location"/"hours"/"price" keywords match
+  # ordinary prose and form field labels, so the ticket was tagged
+  # faq_auto_answered with no reply, no needs_human and no escalation - which
+  # reads as handled. #81739 (Judy Jiang) and #81254 (a 12-person November
+  # event whose sender had just hit a form error on the site) both sat there.
+  #
+  # Deliberately NOT a fix to general_faq's keywords: that rule also absorbs
+  # Eventbrite, payout and missed-call noise, and narrowing it would push all
+  # of that into fallback_unclassified and needs_human instead.
+  - name: contact_form_inquiry
+    match:
+      any_keywords: ["new submission from contact us", "how may we help you"]
+    action: no_action
+    force_human_review: false
+    add_tags: ["needs_human", "contact_form_inquiry"]
+
   - name: general_faq
     match:
       any_keywords: ["what is", "how does", "do you offer", "hours", "location", "price", "cost", "policy"]
