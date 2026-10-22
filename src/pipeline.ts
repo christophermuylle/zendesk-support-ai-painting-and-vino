@@ -10,6 +10,7 @@ import type { Mode } from "./config.js";
 import {
   ORDER_CONFIRMATION_FIELD_ID,
   ORDER_CONFIRMATION_FIELD_VALUE,
+  NEWSLETTER_SIGNUP_FIELD_VALUE,
   PAYPAL_RECEIPT_FIELD_VALUE,
   LICENSEE_INITIAL_RESPONSE_FIELD_VALUE,
   LICENSEE_INITIAL_RESPONSE_TEXT,
@@ -64,6 +65,7 @@ export interface PipelineResult {
     | "posted_internal_note"
     | "skipped_out_of_scope"
     | "order_confirmation_solved"
+    | "newsletter_signup_solved_and_closed"
     | "paypal_receipt_solved_and_closed"
     | "order_confirmation_left_open"
     | "licensee_initial_response_sent"
@@ -183,6 +185,39 @@ export async function processTicket(deps: PipelineDeps, ticketId: number): Promi
       ruleDecision,
       matchedLocation: null,
       finalAction: status === "solved" ? "order_confirmation_solved" : "order_confirmation_left_open",
+      mode: deps.mode,
+    };
+  }
+
+  // "newsletter_signup" - the storefront's newsletter form notifications,
+  // subject "New submission from Newsletter Signup". Same shape as
+  // order_confirmation above: nobody is asking anything, so no AI call and
+  // no reply of any kind, draft or auto mode alike. Categorize it (which
+  // also auto-applies Zendesk's own tag for that option via the tagger
+  // field), then Solve and Close.
+  //
+  // Christopher, 2026-10-22: "Tickets with New submission from Newsletter
+  // Signup subject lines should be closed with reason for contacting
+  // newsletter signup and status closed with solved."
+  //
+  // Solved and Closed go as two sequential updates so the ticket passes
+  // through Solved on its way to Closed, matching Zendesk's normal status
+  // flow - the same thing the order_confirmation and paypal_receipt
+  // branches do, and verified over the API on Wine and Canvas's newsletter
+  // tickets (e.g. #29280: solved(api) -> closed(api)). Zendesk rejects a
+  // direct new -> closed jump.
+  if (ruleDecision.action === "newsletter_signup") {
+    await deps.zendesk.updateTicket(ticketId, {
+      status: "solved",
+      addTags: ruleDecision.addTags,
+      fields: [{ id: ORDER_CONFIRMATION_FIELD_ID, value: NEWSLETTER_SIGNUP_FIELD_VALUE }],
+    });
+    await deps.zendesk.updateTicket(ticketId, { status: "closed" });
+    return {
+      ticketId,
+      ruleDecision,
+      matchedLocation: null,
+      finalAction: "newsletter_signup_solved_and_closed",
       mode: deps.mode,
     };
   }

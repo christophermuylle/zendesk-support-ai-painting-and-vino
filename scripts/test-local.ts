@@ -17,6 +17,7 @@ import { LocationResolver } from "../src/locations.js";
 import { AiDrafter, type IAiDrafter } from "../src/ai.js";
 import type { IZendeskClient } from "../src/zendesk.js";
 import { processTicket } from "../src/pipeline.js";
+import { ORDER_CONFIRMATION_FIELD_ID } from "../src/config.js";
 import type { ActionType, DraftResult, RuleDecision, TicketContext, ZendeskComment, PrivateEventCategory } from "../src/types.js";
 import { extractFormContactName, firstNameFromFullName, looksMachineDerivedName } from "../src/util.js";
 import { getLocationInfo, minimumGroupSizeFor, classifyPrivateEvent, type PrivateEventLocationKey } from "../src/private-event-quotes.js";
@@ -35,6 +36,18 @@ const locations = new LocationResolver(path.join(CONFIG_DIR, "locations.yaml"));
 // Records every requester-name correction the pipeline makes, so a
 // scenario can assert on it rather than trusting the log.
 const nameCorrections: Array<{ userId: number; name: string }> = [];
+/** Every updateTicket call the pipeline makes, in order, so a test can assert
+ * on the status sequence and the tagger-field value - not just the
+ * finalAction string. Keyed by ticketId; scenarios use distinct ids. */
+const ticketUpdates: Array<{
+  ticketId: number;
+  status?: string;
+  addTags?: string[];
+  fields?: Array<{ id: number; value: string | null }>;
+}> = [];
+/** Every postComment call, so a test can assert that a mechanical rule
+ * posted NOTHING - the thing that actually reaches a customer. */
+const postedComments: Array<{ ticketId: number; isPublic: boolean }> = [];
 
 class MockZendeskClient implements IZendeskClient {
   constructor(private ctx: TicketContext) {}
@@ -54,10 +67,12 @@ class MockZendeskClient implements IZendeskClient {
   ): Promise<void> {
     const nl = String.fromCharCode(10);
     const shown = opts.htmlBody ? `[htmlBody] ${opts.htmlBody}` : body;
+    postedComments.push({ ticketId, isPublic: opts.isPublic });
     console.log(nl + `  -> would post comment (public=${opts.isPublic}, status=${opts.status ?? "unchanged"}, tags=${opts.addTags?.join(",") ?? "-"}, fields=${JSON.stringify(opts.fields ?? [])}):`);
     console.log(`     "${shown.split(nl).join(nl + "     ")}"`);
   }
   async updateTicket(ticketId: number, opts: { status?: string; addTags?: string[]; fields?: Array<{ id: number; value: string | null }> }): Promise<void> {
+    ticketUpdates.push({ ticketId, status: opts.status, addTags: opts.addTags, fields: opts.fields });
     console.log(String.fromCharCode(10) + `  -> would set status=${opts.status ?? "unchanged"}, tags+=${opts.addTags?.join(",") ?? "-"}, fields=${JSON.stringify(opts.fields ?? [])}, no reply (out of scope)`);
   }
   async searchTicketIds(): Promise<number[]> {
@@ -1024,6 +1039,39 @@ Instagram`,
       brand: "painting_and_vino",
     },
   },
+  {
+    label: 'REGRESSION (2026-10-22): "New submission from Newsletter Signup" is filed, Solved and Closed',
+    ctx: {
+      ticket: {
+        id: 7742,
+        subject: "New submission from Newsletter Signup",
+        description: `Name
+Dana Rivera
+Email
+dana@example.com
+Location
+Indianapolis`,
+        status: "new",
+        requester_id: CUSTOMER_ID,
+        tags: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Dana Rivera", email: "dana@example.com" },
+      comments: [
+        makeComment(
+          `Name
+Dana Rivera
+Email
+dana@example.com
+Location
+Indianapolis`,
+          CUSTOMER_ID
+        ),
+      ],
+      brand: "painting_and_vino",
+    },
+  },
 ];
 
 async function main() {
@@ -1501,6 +1549,60 @@ async function main() {
     );
   }
   console.log("Regression check passed: known staff addresses are never answered as customers, on either brand.");
+
+  // --- Newsletter signup notifications (2026-10-22) ---
+  // Christopher: "Tickets with New submission from Newsletter Signup subject
+  // lines should be closed with reason for contacting newsletter signup and
+  // status closed with solved." Wine and Canvas already had this; Painting
+  // and Vino had no newsletter rule at all, so these were falling through to
+  // general_faq (the form body carries a "Location" field label) and sitting
+  // Open tagged faq_auto_answered.
+  const nlLabel = 'REGRESSION (2026-10-22): "New submission from Newsletter Signup" is filed, Solved and Closed';
+  const nlResult = resultsByLabel.get(nlLabel);
+  if (!nlResult) throw new Error(`ASSERTION FAILED: scenario "${nlLabel}" did not run`);
+  if (nlResult.ruleDecision.matchedRule !== "newsletter_signup_ticket") {
+    throw new Error(
+      `ASSERTION FAILED: a newsletter notification matched "${nlResult.ruleDecision.matchedRule}" instead of ` +
+        `newsletter_signup_ticket. It has to sit above general_faq and contact_form_inquiry, both of which ` +
+        `match field labels present on this form.`
+    );
+  }
+  if (nlResult.finalAction !== "newsletter_signup_solved_and_closed") {
+    throw new Error(
+      `ASSERTION FAILED: a newsletter notification produced "${nlResult.finalAction}" instead of ` +
+        `newsletter_signup_solved_and_closed.`
+    );
+  }
+  const nlUpdates = ticketUpdates.filter((u) => u.ticketId === 7742);
+  if (nlUpdates.map((u) => u.status).join(",") !== "solved,closed") {
+    throw new Error(
+      `ASSERTION FAILED: expected the status sequence solved -> closed, got ` +
+        `"${nlUpdates.map((u) => u.status ?? "unchanged").join(",")}". Zendesk rejects a direct new -> closed jump, ` +
+        `so the ticket has to pass through Solved.`
+    );
+  }
+  // The literal, NOT NEWSLETTER_SIGNUP_FIELD_VALUE: this assertion exists to
+  // guard that constant, and comparing it against itself would always pass.
+  // Read off this brand's live field (114096070134) on 2026-10-22 - option
+  // "Newsletter Signup", value "newsletter_signup". If the option is ever
+  // rebuilt, change it here and in src/config.ts together.
+  const EXPECTED_NEWSLETTER_VALUE = "newsletter_signup";
+  const nlField = (nlUpdates[0].fields ?? []).find((f) => f.id === ORDER_CONFIRMATION_FIELD_ID);
+  if (nlField?.value !== EXPECTED_NEWSLETTER_VALUE) {
+    throw new Error(
+      `ASSERTION FAILED: "Reason for Customer Contacting Us" was set to ${JSON.stringify(nlField?.value)} ` +
+        `instead of "${EXPECTED_NEWSLETTER_VALUE}". Zendesk silently ignores a tagger value that is not one ` +
+        `of the field's options, which leaves the field blank on every ticket - so this value has to match the ` +
+        `live field exactly (it is "newsletter_signup" here and "newsletter_sign_up" on Wine and Canvas).`
+    );
+  }
+  if (postedComments.some((c) => c.ticketId === 7742)) {
+    throw new Error(
+      `ASSERTION FAILED: a newsletter notification had a comment posted on it. Nobody is asking anything; ` +
+        `nothing should reach the requester, in draft or auto mode.`
+    );
+  }
+  console.log("Regression check passed: newsletter signup notifications are filed as Newsletter Signup, Solved then Closed, with no reply (2026-10-22).");
 
   console.log("Regression check passed: a staff member's own follow-up to a past customer is no longer auto-quoted.");
 }

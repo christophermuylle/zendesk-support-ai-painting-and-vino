@@ -37,6 +37,21 @@ export type Mode = "draft" | "auto";
 export const ORDER_CONFIRMATION_FIELD_ID = Number(process.env.ORDER_CONFIRMATION_FIELD_ID ?? 114096070134);
 export const ORDER_CONFIRMATION_FIELD_VALUE = process.env.ORDER_CONFIRMATION_FIELD_VALUE ?? "order_confirmation";
 
+// "Reason for Customer Contacting Us" option for the storefront's
+// newsletter form notifications - "New submission from Newsletter Signup"
+// subject lines (Christopher, 2026-10-22: "Tickets with New submission from
+// Newsletter Signup subject lines should be closed with reason for
+// contacting newsletter signup and status closed with solved").
+//
+// NOTE the value differs between the two brands, so do not copy Wine and
+// Canvas's: that field's option is "Newsletter Sign up" with value
+// "newsletter_sign_up" (three words), while this one is "Newsletter Signup"
+// with value "newsletter_signup". Read off Painting and Vino's live field
+// (114096070134) on 2026-10-22. Zendesk silently ignores a tagger value
+// that is not one of the field's options, which would leave the field blank
+// on every ticket, so this has to match exactly.
+export const NEWSLETTER_SIGNUP_FIELD_VALUE = process.env.NEWSLETTER_SIGNUP_FIELD_VALUE ?? "newsletter_signup";
+
 // "Reason for Customer Contacting Us" option for PayPal's own "Notification
 // of payment received" emails (Christopher, 2026-09-24). Confirmed against
 // the live field and against ticket #81322, which he filed by hand as a

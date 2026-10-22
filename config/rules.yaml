@@ -12,7 +12,7 @@
 #   tags             - fires if the ticket already has any of these Zendesk tags
 #
 # action: solve | pending | escalate | no_action | order_confirmation |
-#         paypal_receipt |
+#         newsletter_signup | paypal_receipt |
 #         licensee_initial_response | private_event_quote
 #   solve               - AI answers the question and the ticket is marked Solved
 #   pending             - AI replies (usually asking for info) and ticket goes to
@@ -32,6 +32,14 @@
 #                         then Solves the ticket if the order total is > $0, or
 #                         leaves it Open for Bonnie if it's $0/unparseable. See
 #                         src/pipeline.ts's order_confirmation branch.
+#   newsletter_signup   - for the storefront's "New submission from Newsletter
+#                         Signup" notification tickets, not a real support
+#                         question: no AI call, no reply of any kind. Sets the
+#                         "Reason for Customer Contacting Us" field to
+#                         Newsletter Signup (which also auto-applies Zendesk's
+#                         own tag for that option), then Solves the ticket and
+#                         immediately Closes it. See src/pipeline.ts's
+#                         newsletter_signup branch.
 #   licensee_initial_response - for automated "New submission from Licensee
 #                         Application" notification tickets, not a real
 #                         support question: no AI call. Posts the fixed
@@ -101,6 +109,33 @@ rules:
     match:
       any_keywords: ["new order"]
     action: order_confirmation
+    force_human_review: false
+
+  # The storefront's newsletter form notifications - subject "New submission
+  # from Newsletter Signup". Nobody is writing in; there is nothing to
+  # answer. Categorized, Solved, then Closed, with no AI call and no reply
+  # of any kind.
+  #
+  # Christopher, 2026-10-22: "Tickets with New submission from Newsletter
+  # Signup subject lines should be closed with reason for contacting
+  # newsletter signup and status closed with solved."
+  #
+  # Sits up here with the other mechanical rules because it has to beat
+  # general_faq, exactly like paypal_receipt_notification below: left to
+  # fall through, a newsletter notification gets tagged faq_auto_answered
+  # and sits Open. It also has to beat contact_form_inquiry, which matches
+  # "new submission from contact us" - a different form, but close enough in
+  # wording that order is doing real work here, not just tidiness.
+  #
+  # Matched on "newsletter signup"/"newsletter sign up" rather than the full
+  # subject, so a renamed form or a per-city variant still lands here. This
+  # mirrors Wine and Canvas's newsletter_signup_ticket rule, whose keywords
+  # already cover its own "<Brand> - <City> Newsletter Sign Up" subjects and
+  # this "New submission from ..." wording too.
+  - name: newsletter_signup_ticket
+    match:
+      any_keywords: ["newsletter signup", "newsletter sign up"]
+    action: newsletter_signup
     force_human_review: false
 
   # PayPal's own "Notification of payment received" emails - payments go to
