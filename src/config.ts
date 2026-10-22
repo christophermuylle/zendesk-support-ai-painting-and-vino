@@ -37,6 +37,21 @@ export type Mode = "draft" | "auto";
 export const ORDER_CONFIRMATION_FIELD_ID = Number(process.env.ORDER_CONFIRMATION_FIELD_ID ?? 114096070134);
 export const ORDER_CONFIRMATION_FIELD_VALUE = process.env.ORDER_CONFIRMATION_FIELD_VALUE ?? "order_confirmation";
 
+// "Reason for Customer Contacting Us" option for a storefront order in
+// which an individual guest paid for their own seat at someone else's
+// private party - the order body carries a "Paint Party Guest ..." product
+// line (see findPaintPartyGuestLineItem in src/util.ts).
+//
+// Christopher, 2026-10-22: "Paint Party Guest tickets should be pending
+// status and the reason for contacting should be Private Event Payment."
+// He added the option while this was being built; read off the live field
+// (114096070134) the same day, it is named "Private Event Party Guest
+// Order" with value "private_event_party_guest_order". Zendesk silently
+// ignores a tagger value that is not one of the field's options, so this
+// has to match exactly.
+export const PRIVATE_EVENT_PARTY_GUEST_ORDER_FIELD_VALUE =
+  process.env.PRIVATE_EVENT_PARTY_GUEST_ORDER_FIELD_VALUE ?? "private_event_party_guest_order";
+
 // "Reason for Customer Contacting Us" option for the storefront's
 // newsletter form notifications - "New submission from Newsletter Signup"
 // subject lines (Christopher, 2026-10-22: "Tickets with New submission from

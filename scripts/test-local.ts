@@ -1072,6 +1072,206 @@ Indianapolis`,
       brand: "painting_and_vino",
     },
   },
+  {
+    label: 'REGRESSION (#81740, 2026-10-22): a guest-only "Paint Party Guest" order goes Pending as a party guest order',
+    ctx: {
+      ticket: {
+        id: 7751,
+        subject: "[Painting and Vino]: You've got a new order: #219757",
+        description: `New order: #219757
+
+You\u2019ve received a new order from Alex Guest:
+
+Order summary
+Order #219757 (2026-10-09)
+
+Product Quantity Price
+
+Paint Party Guest - 10/9/2026 (#219740-21488-PAINT-PARTY-GUEST---10/9/2026) Sandy\u2019s Birthday Paint Party
+Fri, Oct 9th, 2026 @ 6:00 pm - 8:00 pm PST
+Private Event \u2013 Los Angeles Area
+\u00d71 $35.00
+
+Subtotal: $35.00
+Total: $35.00
+Payment method: Visa ending in 4242`,
+        status: "new",
+        requester_id: CUSTOMER_ID,
+        tags: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Order Notification", email: "store@example.com" },
+      comments: [makeComment(`New order: #219757
+
+You\u2019ve received a new order from Alex Guest:
+
+Order summary
+Order #219757 (2026-10-09)
+
+Product Quantity Price
+
+Paint Party Guest - 10/9/2026 (#219740-21488-PAINT-PARTY-GUEST---10/9/2026) Sandy\u2019s Birthday Paint Party
+Fri, Oct 9th, 2026 @ 6:00 pm - 8:00 pm PST
+Private Event \u2013 Los Angeles Area
+\u00d71 $35.00
+
+Subtotal: $35.00
+Total: $35.00
+Payment method: Visa ending in 4242`, CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
+  {
+    label: 'REGRESSION (#82022, 2026-10-22): an order with both a Deposit and a Paint Party Guest line is still a party guest order on this brand',
+    ctx: {
+      ticket: {
+        id: 7752,
+        subject: "[Painting and Vino]: You've got a new order: #220672",
+        description: `New order: #220672
+
+You\u2019ve received a new order from Tessa Morales:
+
+Order summary
+Order #220672 (2026-10-19)
+
+Product Quantity Price
+
+Deposit - 2 Seats (#220654-21637-DEPOSIT---2-SEATS-) 8th Birthday Painting and Kiddos Party
+Wed, Nov 11th, 2026 @ 12:00 pm - 2:00 pm PST
+Private Event \u2013 San Diego County Area
+\u00d71 $70.00
+
+Paint Party Guest - 11/11/26 (#220656-21637-PAINT-PARTY-GUEST---11/11/26) 8th Birthday Painting and Kiddos Party
+Wed, Nov 11th, 2026 @ 12:00 pm - 2:00 pm PST
+Private Event \u2013 San Diego County Area
+\u00d71 $35.00
+
+Subtotal: $105.00
+Total: $105.00
+Payment method: Visa ending in 0206`,
+        status: "new",
+        requester_id: CUSTOMER_ID,
+        tags: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Order Notification", email: "store@example.com" },
+      comments: [makeComment(`New order: #220672
+
+You\u2019ve received a new order from Tessa Morales:
+
+Order summary
+Order #220672 (2026-10-19)
+
+Product Quantity Price
+
+Deposit - 2 Seats (#220654-21637-DEPOSIT---2-SEATS-) 8th Birthday Painting and Kiddos Party
+Wed, Nov 11th, 2026 @ 12:00 pm - 2:00 pm PST
+Private Event \u2013 San Diego County Area
+\u00d71 $70.00
+
+Paint Party Guest - 11/11/26 (#220656-21637-PAINT-PARTY-GUEST---11/11/26) 8th Birthday Painting and Kiddos Party
+Wed, Nov 11th, 2026 @ 12:00 pm - 2:00 pm PST
+Private Event \u2013 San Diego County Area
+\u00d71 $35.00
+
+Subtotal: $105.00
+Total: $105.00
+Payment method: Visa ending in 0206`, CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
+  {
+    label: 'CONTROL (2026-10-22): ordinary admissions whose product names contain "Paint Party" are still Order Confirmation + Solved',
+    ctx: {
+      ticket: {
+        id: 7753,
+        subject: "[Painting and Vino]: You've got a new order: #219422",
+        description: `New order: #219422
+
+You\u2019ve received a new order from Casey Buyer:
+
+Order summary
+Order #219422 (2026-10-05)
+
+Product Quantity Price
+
+Blacklight Paint Party Admission (#219400-21488-BLACKLIGHT-PAINT-PARTY-ADMISSION) Blacklight Paint Party
+Sat, Oct 4th, 2026 @ 7:00 pm PST
+\u00d72 $78.00
+
+Private 8 Kids Parrot Paint Party (#219401-21488-PRIVATE-8-KIDS-PARROT-PAINT-PARTY) Parrot Party
+Sat, Oct 4th, 2026 @ 7:00 pm PST
+\u00d71 $39.00
+
+Subtotal: $117.00
+Total: $117.00
+Payment method: Visa ending in 1111`,
+        status: "new",
+        requester_id: CUSTOMER_ID,
+        tags: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Order Notification", email: "store@example.com" },
+      comments: [makeComment(`New order: #219422
+
+You\u2019ve received a new order from Casey Buyer:
+
+Order summary
+Order #219422 (2026-10-05)
+
+Product Quantity Price
+
+Blacklight Paint Party Admission (#219400-21488-BLACKLIGHT-PAINT-PARTY-ADMISSION) Blacklight Paint Party
+Sat, Oct 4th, 2026 @ 7:00 pm PST
+\u00d72 $78.00
+
+Private 8 Kids Parrot Paint Party (#219401-21488-PRIVATE-8-KIDS-PARROT-PAINT-PARTY) Parrot Party
+Sat, Oct 4th, 2026 @ 7:00 pm PST
+\u00d71 $39.00
+
+Subtotal: $117.00
+Total: $117.00
+Payment method: Visa ending in 1111`, CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
+  {
+    // Live wording variant (2026-10-22): the storefront has produced
+    // "Paint Party Guest -9/12/2026" with no space after the dash, alongside
+    // the usual "Paint Party Guest - 10/9/2026". Matching the phrase rather
+    // than a date format is what makes both land; pinned so it stays that way.
+    label: 'REGRESSION (2026-10-22): the no-space "Paint Party Guest -<date>" wording variant still lands',
+    ctx: {
+      ticket: {
+        id: 7754,
+        subject: "[Painting and Vino]: You've got a new order: #218900",
+        description: `New order: #218900
+
+Order summary
+Order #218900 (2026-09-12)
+
+Product Quantity Price
+
+Paint Party Guest -9/12/2026 (#218880-21488-PAINT-PARTY-GUEST--9/12/2026) Girls Night Paint Party
+Fri, Sep 12th, 2026 @ 6:00 pm PST
+\u00d71 $35.00
+
+Subtotal: $35.00
+Total: $35.00`,
+        status: "new",
+        requester_id: CUSTOMER_ID,
+        tags: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Order Notification", email: "store@example.com" },
+      comments: [makeComment("New order: #218900", CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
 ];
 
 async function main() {
@@ -1549,6 +1749,101 @@ async function main() {
     );
   }
   console.log("Regression check passed: known staff addresses are never answered as customers, on either brand.");
+
+  // --- Paint Party Guest orders (2026-10-22) ---
+  // Christopher: "Paint Party Guest tickets should be pending status and the
+  // reason for contacting should be Private Event Payment" - the option he
+  // then added is "Private Event Party Guest Order". These arrive as ordinary
+  // WooCommerce "New order" notifications, so they used to be filed as plain
+  // Order Confirmation and Solved/Closed (#81740, #82022), burying
+  // private-event money among ~21,500 ordinary order tickets.
+  //
+  // The literal, NOT the constant it guards - see the newsletter block below
+  // for why comparing a constant against itself always passes.
+  const EXPECTED_GUEST_ORDER_VALUE = "private_event_party_guest_order";
+
+  const guestOnly = resultsByLabel.get(
+    'REGRESSION (#81740, 2026-10-22): a guest-only "Paint Party Guest" order goes Pending as a party guest order'
+  );
+  if (!guestOnly) throw new Error("ASSERTION FAILED: the guest-only order scenario did not run");
+  if (guestOnly.finalAction !== "private_event_party_guest_order_pending") {
+    throw new Error(
+      `ASSERTION FAILED: a "Paint Party Guest" order produced "${guestOnly.finalAction}" instead of ` +
+        `private_event_party_guest_order_pending. The PRODUCT line is the signal - the event name need not say ` +
+        `"private" anywhere (#81740's does not).`
+    );
+  }
+  const guestUpdates = ticketUpdates.filter((u) => u.ticketId === 7751);
+  if (guestUpdates.map((u) => u.status).join(",") !== "pending") {
+    throw new Error(
+      `ASSERTION FAILED: expected a single status update to "pending", got ` +
+        `"${guestUpdates.map((u) => u.status ?? "unchanged").join(",") || "(none)"}". These are deliberately NOT ` +
+        `Solved - money is moving on a private event and Christopher wants the ticket live.`
+    );
+  }
+  const guestField = (guestUpdates[0]?.fields ?? []).find((f) => f.id === ORDER_CONFIRMATION_FIELD_ID);
+  if (guestField?.value !== EXPECTED_GUEST_ORDER_VALUE) {
+    throw new Error(
+      `ASSERTION FAILED: "Reason for Customer Contacting Us" was set to ${JSON.stringify(guestField?.value)} ` +
+        `instead of "${EXPECTED_GUEST_ORDER_VALUE}". Zendesk silently ignores a tagger value that is not one of ` +
+        `the field's options, leaving the field blank on every ticket with nothing to show it failed.`
+    );
+  }
+  if (postedComments.some((c) => c.ticketId === 7751)) {
+    throw new Error(
+      `ASSERTION FAILED: a Paint Party Guest order had a comment posted on it. These are order notifications, ` +
+        `not questions - nothing should reach anyone.`
+    );
+  }
+
+  const guestAndDeposit = resultsByLabel.get(
+    'REGRESSION (#82022, 2026-10-22): an order with both a Deposit and a Paint Party Guest line is still a party guest order on this brand'
+  );
+  if (!guestAndDeposit) throw new Error("ASSERTION FAILED: the deposit+guest order scenario did not run");
+  if (guestAndDeposit.finalAction !== "private_event_party_guest_order_pending") {
+    throw new Error(
+      `ASSERTION FAILED: #82022's shape (a Deposit line AND a Paint Party Guest line) produced ` +
+        `"${guestAndDeposit.finalAction}". This brand has no deposit handling at all, so the guest line is the ` +
+        `only one it can act on. If deposit/final-balance handling is ever ported here, settle the precedence ` +
+        `with Christopher and change this assertion deliberately rather than letting it drift.`
+    );
+  }
+
+  const guestVariant = resultsByLabel.get(
+    'REGRESSION (2026-10-22): the no-space "Paint Party Guest -<date>" wording variant still lands'
+  );
+  if (!guestVariant) throw new Error("ASSERTION FAILED: the wording-variant scenario did not run");
+  if (guestVariant.finalAction !== "private_event_party_guest_order_pending") {
+    throw new Error(
+      `ASSERTION FAILED: "Paint Party Guest -9/12/2026" (no space after the dash, a real live variant) produced ` +
+        `"${guestVariant.finalAction}". Match the phrase, not a date format.`
+    );
+  }
+
+  const plainOrder = resultsByLabel.get(
+    'CONTROL (2026-10-22): ordinary admissions whose product names contain "Paint Party" are still Order Confirmation + Solved'
+  );
+  if (!plainOrder) throw new Error("ASSERTION FAILED: the ordinary-order control scenario did not run");
+  if (plainOrder.finalAction !== "order_confirmation_solved") {
+    throw new Error(
+      `ASSERTION FAILED: an ordinary seat order produced "${plainOrder.finalAction}" instead of ` +
+        `order_confirmation_solved. Both of this ticket's product lines contain "Paint Party" - "Blacklight ` +
+        `Paint Party Admission" and "Private 8 Kids Parrot Paint Party" - and both are ordinary admissions. ` +
+        `Live data (400 recent order tickets, 2026-10-22) has 14+ such lines, plus "Paint Party Admission", ` +
+        `"Private Paint event with Erin" and "CSN Private Paint event activity". Matching anything looser than ` +
+        `the full phrase "paint party guest" sends all of them to Pending.`
+    );
+  }
+  const plainField = (ticketUpdates.filter((u) => u.ticketId === 7753)[0]?.fields ?? []).find(
+    (f) => f.id === ORDER_CONFIRMATION_FIELD_ID
+  );
+  if (plainField?.value !== "order_confirmation") {
+    throw new Error(
+      `ASSERTION FAILED: an ordinary seat order was filed as ${JSON.stringify(plainField?.value)} instead of ` +
+        `order_confirmation.`
+    );
+  }
+  console.log("Regression check passed: Paint Party Guest orders go Pending as Private Event Party Guest Order, ordinary orders are untouched (#81740, #82022).");
 
   // --- Newsletter signup notifications (2026-10-22) ---
   // Christopher: "Tickets with New submission from Newsletter Signup subject

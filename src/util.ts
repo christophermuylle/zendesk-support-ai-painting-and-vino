@@ -417,3 +417,67 @@ export function extractCalendarLink(snippet: string): string | null {
   const m = snippet.match(/Direct link:\s*(https?:\/\/\S+)/i);
   return m ? m[1] : null;
 }
+
+/**
+ * One product line from a storefront "New order" notification ticket.
+ *
+ * WooCommerce renders each purchased item as a line like:
+ *
+ *   Deposit - 2 Seats (#220654-21637-DEPOSIT---2-SEATS-)
+ *   Paint Party Guest - 11/11/26 (#220656-21637-PAINT-PARTY-GUEST---11/11/26)
+ *
+ * (both real lines from PV ticket #82022, order #220672.)
+ *
+ * NOTE on the SKU: only the product NAME is used here. Wine and Canvas's
+ * copy of this parser also reads the first "#<digits>-" segment as the
+ * event's WooCommerce post id, which it uses to tie a later balance
+ * payment back to its deposit. Do NOT assume that here. On this brand the
+ * two lines above carry DIFFERENT first segments (220654, 220656) and the
+ * SAME second one (21637), so on Painting and Vino the first number looks
+ * like the line-item id and the second like the event id - the opposite of
+ * what that code assumes. Confirm against live tickets before building
+ * anything event-scoped on it.
+ */
+export interface OrderLineItem {
+  /** Product name as shown before the SKU, e.g. "Paint Party Guest - 11/11/26". */
+  name: string;
+}
+
+// Matches "<product name> (#<digits>-<rest of sku>)" at the start of a
+// line. The name is captured lazily so it stops at the SKU's opening
+// paren, and requiring the "#<digits>-" shape keeps this off the order's
+// own "[Order #220672] (https://...)" link line and the event's
+// "<Event Name> (https://.../event/slug/)" line.
+const ORDER_LINE_ITEM_RE = /^(.+?)\s*\(#\d+-[^)\n]*\)/gm;
+
+/** Every product line in a "New order" notification body, in order. */
+export function extractOrderLineItems(text: string): OrderLineItem[] {
+  const items: OrderLineItem[] = [];
+  const re = new RegExp(ORDER_LINE_ITEM_RE.source, ORDER_LINE_ITEM_RE.flags);
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text ?? "")) !== null) {
+    items.push({ name: m[1].trim() });
+  }
+  return items;
+}
+
+/**
+ * The first product line that is an individual guest paying for their own
+ * seat at someone else's private party, or null if the order has none.
+ *
+ * Christopher, 2026-10-22: "Paint Party Guest tickets should be pending
+ * status and the reason for contacting should be Private Event Payment"
+ * (the field option he then added is "Private Event Party Guest Order").
+ *
+ * The PRODUCT name is the signal, not the event name - the same lesson as
+ * findDepositLineItem on the other brand. Searching the ticket for
+ * "private" matches ordinary single-seat sales at events that merely have
+ * "Private" in their title, and misses guest orders whose event name never
+ * says "private". Real examples: #81740 (a guest-only order, "Paint Party
+ * Guest - 10/9/2026") and #82022 ("Deposit - 2 Seats" plus "Paint Party
+ * Guest - 11/11/26"). Both were filed as plain Order Confirmation and
+ * closed before this existed.
+ */
+export function findPaintPartyGuestLineItem(text: string): OrderLineItem | null {
+  return extractOrderLineItems(text).find((i) => /paint party guest/i.test(i.name)) ?? null;
+}

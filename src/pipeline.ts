@@ -11,6 +11,7 @@ import {
   ORDER_CONFIRMATION_FIELD_ID,
   ORDER_CONFIRMATION_FIELD_VALUE,
   NEWSLETTER_SIGNUP_FIELD_VALUE,
+  PRIVATE_EVENT_PARTY_GUEST_ORDER_FIELD_VALUE,
   PAYPAL_RECEIPT_FIELD_VALUE,
   LICENSEE_INITIAL_RESPONSE_FIELD_VALUE,
   LICENSEE_INITIAL_RESPONSE_TEXT,
@@ -30,6 +31,7 @@ import {
 import type { DraftResult, RuleDecision, TicketContext } from "./types.js";
 import {
   extractOrderTotal,
+  findPaintPartyGuestLineItem,
   extractFormContactName,
   getLatestComment,
   looksLikeReceivedConfirmation,
@@ -65,6 +67,7 @@ export interface PipelineResult {
     | "posted_internal_note"
     | "skipped_out_of_scope"
     | "order_confirmation_solved"
+    | "private_event_party_guest_order_pending"
     | "newsletter_signup_solved_and_closed"
     | "paypal_receipt_solved_and_closed"
     | "order_confirmation_left_open"
@@ -173,7 +176,44 @@ export async function processTicket(deps: PipelineDeps, ticketId: number): Promi
   // field) and close it - UNLESS the order total is $0 or unparseable, in
   // which case it's left Open for Bonnie to check by hand.
   if (ruleDecision.action === "order_confirmation") {
-    const total = extractOrderTotal(ctx.ticket.description ?? "");
+    const description = ctx.ticket.description ?? "";
+
+    // An individual guest paying for their own seat at someone else's
+    // private party. Left PENDING rather than Solved, and filed under its
+    // own reason so private-event money is not buried in the ~21,500
+    // ordinary Order Confirmation tickets.
+    //
+    // Christopher, 2026-10-22: "Paint Party Guest tickets should be pending
+    // status and the reason for contacting should be Private Event Payment."
+    //
+    // Still mechanical: no AI call and no comment of any kind, same as every
+    // other order notification. Nobody is writing in.
+    //
+    // NOTE for whoever ports Wine and Canvas's deposit/final-balance
+    // handling to this brand (it has none today - a private-event deposit
+    // here is filed as a plain Order Confirmation and Solved, e.g. #82022's
+    // $70 "Deposit - 2 Seats" line): #82022 carries BOTH a Deposit line and
+    // a Paint Party Guest line, and this branch files it as a guest order
+    // because that is the only one of the two this brand knows about. Decide
+    // the precedence with Christopher at that point rather than inheriting
+    // it from here.
+    const guestLine = findPaintPartyGuestLineItem(description);
+    if (guestLine) {
+      await deps.zendesk.updateTicket(ticketId, {
+        status: "pending",
+        addTags: ruleDecision.addTags,
+        fields: [{ id: ORDER_CONFIRMATION_FIELD_ID, value: PRIVATE_EVENT_PARTY_GUEST_ORDER_FIELD_VALUE }],
+      });
+      return {
+        ticketId,
+        ruleDecision,
+        matchedLocation: null,
+        finalAction: "private_event_party_guest_order_pending",
+        mode: deps.mode,
+      };
+    }
+
+    const total = extractOrderTotal(description);
     const status: ZendeskStatus = total !== null && total > 0 ? "solved" : "open";
     await deps.zendesk.updateTicket(ticketId, {
       status,
