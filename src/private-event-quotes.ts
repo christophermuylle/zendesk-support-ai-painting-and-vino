@@ -85,8 +85,6 @@ const CORPORATE_KEYWORDS = [
 const FUNDRAISER_KEYWORDS = [
   "fundraiser",
   "charity",
-  "nonprofit",
-  "non-profit",
   "rescue",
   "donate",
   "donation",
@@ -94,13 +92,65 @@ const FUNDRAISER_KEYWORDS = [
   "fundraisers",
   "fundraising",
   "charities",
-  "nonprofits",
   "rescues",
   "donates",
   "donating",
   "donated",
   "donations",
+  // Two-word spellings. Added 2026-10-28 with the nonprofit change below:
+  // #70000 ("as part of a fund raising project") is a genuine fundraiser that
+  // only ever said "fund raising", so it was classified off "non-profit"
+  // alone. Once that word stops deciding the category, this is what has to
+  // catch it.
+  "fund raising",
+  "fund raiser",
+  "fund raisers",
 ];
+
+/**
+ * Being a nonprofit is WHO THE CUSTOMER IS, not what the event is - so these
+ * words no longer decide the category.
+ *
+ * #82266 (2026-10-28) got the fundraiser quote because Rose at PBS KVIE
+ * wrote "I'm hosting an employee party ... Can you share pricing and if you
+ * have non-profit rates?". She said "employee party" in so many words, and
+ * "employee" is a CORPORATE keyword - but classifyPrivateEvent checks
+ * fundraiser first, so "non-profit" won and she was sent donation mechanics
+ * for a staff Christmas party. Raimey had to retract it by hand.
+ *
+ * Checked against the last 400 private-event inquiries before making this
+ * change. Five said nonprofit/non-profit without any stronger fundraiser
+ * word, and only ONE of those was really a fundraiser (#70000, "fund raising
+ * project" - now caught by the two-word spellings above). The rest were a
+ * nonprofit association booking its ANNUAL CONFERENCE (#80826), a nonprofit
+ * running resident programming (#75346), and a nonprofit family services org
+ * booking a STAFF RETREAT (#77541, the same bug as #82266). So this word was
+ * wrong more often than it was right.
+ *
+ * It still matters, just not for the category: NONPROFIT_SELF_DESCRIPTION
+ * tickets get needs_human, because they tend to ask about nonprofit rates or
+ * wave a tax-exempt certificate (#82266 and #77541 both did) and no quote
+ * template answers that.
+ */
+const NONPROFIT_SELF_DESCRIPTION_KEYWORDS = [
+  "nonprofit",
+  "non-profit",
+  "nonprofits",
+  "non-profits",
+  "not-for-profit",
+  "501c3",
+  "501(c)(3)",
+  "tax-exempt",
+  "tax exempt",
+];
+
+/** True when the ticket describes the CUSTOMER as a nonprofit (or waves a
+ * tax-exempt certificate) - which says nothing about what kind of event they
+ * want, but does mean someone should answer them about rates by hand. */
+export function mentionsNonprofitStatus(ctx: TicketContext): boolean {
+  const text = getTicketMatchText(ctx);
+  return NONPROFIT_SELF_DESCRIPTION_KEYWORDS.some((k) => keywordMatches(text, k));
+}
 
 // Deliberately NOT including a bare "birthday" - see the file header note.
 // PV's "Kids' events" are ages 6+ children's parties, distinct from adult
