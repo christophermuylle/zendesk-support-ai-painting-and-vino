@@ -1272,6 +1272,30 @@ Total: $35.00`,
       brand: "painting_and_vino",
     },
   },
+  {
+    // PV #82383 (Toni Hoyt / AMP30). Raimey was working this booking by hand
+    // and the automation kept answering over her. Her workaround was clearing
+    // the guard tags, which caused exactly the canned emails she was trying
+    // to stop. This tag is the replacement: one thing to add, nothing to
+    // clear, and the pipeline stays out.
+    label: "REGRESSION (#82383): a ticket tagged private_event_agent_working gets no automated reply",
+    ctx: {
+      ticket: {
+        id: 8238, subject: "New Private Event Inquiry (Lead Bros)",
+        description: "Party Request from Painting and Vino\n\nName: Toni Hoyt\nCompany Name: AMP30\nEmail: thoyt@hgfenton.com\nDate of Event: 11/13/2026\nGuests: 20\nLocation: San Diego County, CA\nSource Page https://paintingandvino.com/private-events-paint-party/",
+        status: "open", requester_id: CUSTOMER_ID,
+        tags: ["private_event_inquiry", "private_event_agent_working"],
+        created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Toni Hoyt", email: "thoyt@hgfenton.com" },
+      comments: [
+        makeComment("Party Request from Painting and Vino\n\nName: Toni Hoyt\nCompany Name: AMP30\nEmail: thoyt@hgfenton.com\nDate of Event: 11/13/2026\nGuests: 20\nLocation: San Diego County, CA\nSource Page https://paintingandvino.com/private-events-paint-party/", CUSTOMER_ID),
+        makeComment("Hi Toni, I'm checking artist availability for Friday, 11/13.", 999),
+        makeComment("Just checking in to see if you would be able to Friday, 11/13 at 6:00 PM?", CUSTOMER_ID),
+      ],
+      brand: "painting_and_vino",
+    },
+  },
 ];
 
 async function main() {
@@ -1851,6 +1875,26 @@ async function main() {
     );
   }
   console.log("Regression check passed: known staff addresses are never answered as customers, on either brand.");
+
+  // --- The agent-working tag (#82383, 2026-11-04) ---
+  {
+    const label = "REGRESSION (#82383): a ticket tagged private_event_agent_working gets no automated reply";
+    const r = resultsByLabel.get(label);
+    if (!r) throw new Error(`ASSERTION FAILED: scenario "${label}" did not run`);
+    if (r.finalAction !== "no_op") {
+      throw new Error(
+        `ASSERTION FAILED: ${label} - produced "${r.finalAction}". A ticket a human has claimed must get nothing ` +
+          `at all. Toni Hoyt received the intake questions twice and a second full quote while Raimey was ` +
+          `working her booking by hand.`
+      );
+    }
+    if (postedComments.some((c) => c.ticketId === 8238)) {
+      throw new Error(
+        `ASSERTION FAILED: ${label} - a comment was posted. Not even an internal note: the point of the tag is ` +
+          `that the automation is silent.`
+      );
+    }
+  }
 
   // --- Paint Party Guest orders (2026-10-22) ---
   // Christopher: "Paint Party Guest tickets should be pending status and the

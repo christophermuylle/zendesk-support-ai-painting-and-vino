@@ -212,6 +212,27 @@ export const PRIVATE_EVENT_SELF_MANAGED_LOCATIONS = (
   .map((l) => l.trim().toLowerCase())
   .filter(Boolean);
 
+/**
+ * "A human is working this ticket - automation, hands off."
+ *
+ * Raimey, 2026-11-04, on PV #82383: "I've gotten into the habit of clearing
+ * the tags on tickets I'm actively working so the automations don't pick them
+ * up, but that's easy to miss."
+ *
+ * Clearing the tags is the worst possible way to achieve that, because the
+ * tags ARE the guards: private_event_quote_sent is what turns a later
+ * customer reply into an internal note instead of a second quote, and
+ * private_event_clarification_sent is what stops the intake questions being
+ * asked twice. On #82383 the tags were cleared three times from the agent
+ * interface and each clear was followed by exactly the canned email it was
+ * meant to prevent - the intake questions, then the whole quote again, then
+ * the intake questions again.
+ *
+ * So: one tag to ADD that silences everything, instead of a list to remove.
+ * Checked by both the pipeline and the follow-up sweep.
+ */
+export const PRIVATE_EVENT_AGENT_WORKING_TAG = "private_event_agent_working";
+
 export const PRIVATE_EVENT_LOCATION_TAG_PREFIX = "private_event_location_";
 
 // Tags the follow-up poller (src/followups.ts) applies as each stage of the
