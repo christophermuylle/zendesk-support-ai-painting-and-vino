@@ -717,7 +717,7 @@ function toHtml(plainBody: string, links: VenueLink[]): string {
   return `<p>${html}</p>`;
 }
 
-const SIGN_OFF = ["Cheers,", "", "Raimey Williams", "Private Event Coordinator, Painting & Vino"];
+const SIGN_OFF = ["Cheers,", "", "Jessica Muylle", "Private Event Coordinator, Painting & Vino"];
 
 /** The first pricing tier is written as "8-29" in the tier tables, but the
  * quote must not advertise a band that starts below the minimum we are
