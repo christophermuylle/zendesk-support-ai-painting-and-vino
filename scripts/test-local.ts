@@ -1123,6 +1123,69 @@ Payment method: Visa ending in 4242`, CUSTOMER_ID)],
     },
   },
   {
+    label: 'REGRESSION (#82724 / order #222238, 2026-11-16): a deposit-only order goes Pending as a Private Event Deposit',
+    ctx: {
+      ticket: {
+        id: 7756,
+        subject: "[Painting and Vino]: You've got a new order: #222238",
+        description: `New order: #222238
+
+You\u2019ve received a new order from David Hartman:
+
+Order summary
+Order #222238 (2026-11-16)
+
+Product Quantity Price
+
+Deposit - 2 Seats (#222117-4-DEPOSIT---2-SEATS) HD Supply Holiday Party
+Tue, Dec 15th, 2026 @ 2:00 pm - 5:00 pm PST
+Painting and Vino Private Event \u2013 Sacramento Area
+\u00d71 $100.00
+
+Subtotal: $100.00
+Total: $100.00
+Payment method: Visa ending in 8052`,
+        status: "new", requester_id: CUSTOMER_ID, tags: [],
+        created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "David Hartman", email: "david.hartman@example.com" },
+      comments: [makeComment("deposit order notification", CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
+  {
+    label: 'CONTROL (2026-11-16): an ordinary seat order whose BODY mentions a deposit is still Order Confirmation + Solved',
+    ctx: {
+      ticket: {
+        id: 7757,
+        subject: "[Painting and Vino]: You've got a new order: #222999",
+        description: `New order: #222999
+
+You\u2019ve received a new order from Dana Trapp:
+
+Order summary
+Order #222999 (2026-11-16)
+
+Product Quantity Price
+
+Sunflower Sunset - Midtown 12/2 (#222800-9-SUNFLOWER-SUNSET---MIDTOWN-12/2) Sunflower Sunset
+Wed, Dec 2nd, 2026 @ 6:00 pm - 9:00 pm PST
+\u00d72 $90.00
+
+Customer note: paid the deposit for my sister's party separately, this is just our two seats
+
+Subtotal: $90.00
+Total: $90.00
+Payment method: Visa ending in 1111`,
+        status: "new", requester_id: CUSTOMER_ID, tags: [],
+        created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Dana Trapp", email: "dana@example.com" },
+      comments: [makeComment("ordinary order notification", CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
+  {
     label: 'REGRESSION (#82022, 2026-10-22): an order with both a Deposit and a Paint Party Guest line is still a party guest order on this brand',
     ctx: {
       ticket: {
@@ -2013,9 +2076,10 @@ async function main() {
   if (guestAndDeposit.finalAction !== "private_event_party_guest_order_pending") {
     throw new Error(
       `ASSERTION FAILED: #82022's shape (a Deposit line AND a Paint Party Guest line) produced ` +
-        `"${guestAndDeposit.finalAction}". This brand has no deposit handling at all, so the guest line is the ` +
-        `only one it can act on. If deposit/final-balance handling is ever ported here, settle the precedence ` +
-        `with Christopher and change this assertion deliberately rather than letting it drift.`
+        `"${guestAndDeposit.finalAction}". Deposit handling arrived 2026-11-16 and the guest check stays FIRST, ` +
+        `so mixed orders keep filing exactly as they did before - only the Reason differs between the two, and ` +
+        `both go Pending. Four live orders have this shape (#79922, #82241, #82022, #81605). Changing which one ` +
+        `wins is Christopher's call, not a refactor's.`
     );
   }
 
@@ -2027,6 +2091,64 @@ async function main() {
     throw new Error(
       `ASSERTION FAILED: "Paint Party Guest -9/12/2026" (no space after the dash, a real live variant) produced ` +
         `"${guestVariant.finalAction}". Match the phrase, not a date format.`
+    );
+  }
+
+  // --- Private-event deposits (2026-11-16) ---
+  // Christopher, on order #222238: "All orders for Deposit or Paint Party
+  // Guest should go to pending so the event coordinator can note the payment
+  // was made." Before this, all 32 deposit orders since 2026-08-01 were filed
+  // as plain Order Confirmation - 31 closed, 1 solved, none ever Pending.
+  //
+  // The literal, not the constant it guards.
+  const EXPECTED_DEPOSIT_VALUE = "private_event_deposit";
+
+  const depositOnly = resultsByLabel.get(
+    'REGRESSION (#82724 / order #222238, 2026-11-16): a deposit-only order goes Pending as a Private Event Deposit'
+  );
+  if (!depositOnly) throw new Error("ASSERTION FAILED: the deposit-only order scenario did not run");
+  if (depositOnly.finalAction !== "private_event_deposit_pending") {
+    throw new Error(
+      `ASSERTION FAILED: a deposit-only order produced "${depositOnly.finalAction}" instead of ` +
+        `private_event_deposit_pending. This is #82724's exact shape - a single "Deposit - 2 Seats" line at an ` +
+        `event named "HD Supply Holiday Party", which says "private" nowhere. The PRODUCT is the signal.`
+    );
+  }
+  const depositUpdates = ticketUpdates.filter((u) => u.ticketId === 7756);
+  if (depositUpdates.map((u) => u.status).join(",") !== "pending") {
+    throw new Error(
+      `ASSERTION FAILED: expected a single status update to "pending", got ` +
+        `"${depositUpdates.map((u) => u.status ?? "unchanged").join(",") || "(none)"}". A deposit means money has ` +
+        `moved on a private event and the coordinator has to note it against the booking.`
+    );
+  }
+  const depositField = (depositUpdates[0]?.fields ?? []).find((f) => f.id === ORDER_CONFIRMATION_FIELD_ID);
+  if (depositField?.value !== EXPECTED_DEPOSIT_VALUE) {
+    throw new Error(
+      `ASSERTION FAILED: "Reason for Customer Contacting Us" was set to ${JSON.stringify(depositField?.value)} ` +
+        `instead of "${EXPECTED_DEPOSIT_VALUE}". Zendesk silently ignores a tagger value that is not one of the ` +
+        `field's options, leaving the field blank with nothing to show it failed.`
+    );
+  }
+  if (postedComments.some((c) => c.ticketId === 7756)) {
+    throw new Error(
+      `ASSERTION FAILED: a deposit order had a comment posted on it. These are order notifications, not questions.`
+    );
+  }
+
+  // The matcher reads PRODUCT LINES only. This order's single product is an
+  // ordinary two-seat admission; the word "deposit" appears in a customer
+  // note further down the body. Searching the body instead of the line items
+  // would send it to Pending.
+  const depositTrap = resultsByLabel.get(
+    'CONTROL (2026-11-16): an ordinary seat order whose BODY mentions a deposit is still Order Confirmation + Solved'
+  );
+  if (!depositTrap) throw new Error("ASSERTION FAILED: the body-mentions-deposit control scenario did not run");
+  if (depositTrap.finalAction !== "order_confirmation_solved") {
+    throw new Error(
+      `ASSERTION FAILED: an ordinary seat order produced "${depositTrap.finalAction}" instead of ` +
+        `order_confirmation_solved. Its only product line is "Sunflower Sunset - Midtown 12/2"; "deposit" appears ` +
+        `only in a customer note. Matching the body rather than the product lines is what this catches.`
     );
   }
 

@@ -11,6 +11,7 @@ import {
   ORDER_CONFIRMATION_FIELD_ID,
   ORDER_CONFIRMATION_FIELD_VALUE,
   NEWSLETTER_SIGNUP_FIELD_VALUE,
+  PRIVATE_EVENT_DEPOSIT_FIELD_VALUE,
   PRIVATE_EVENT_PARTY_GUEST_ORDER_FIELD_VALUE,
   PAYPAL_RECEIPT_FIELD_VALUE,
   LICENSEE_INITIAL_RESPONSE_FIELD_VALUE,
@@ -32,6 +33,7 @@ import {
 import type { DraftResult, RuleDecision, TicketContext } from "./types.js";
 import {
   extractOrderTotal,
+  findDepositLineItem,
   findPaintPartyGuestLineItem,
   extractFormContactName,
   getLatestComment,
@@ -70,6 +72,7 @@ export interface PipelineResult {
     | "skipped_out_of_scope"
     | "order_confirmation_solved"
     | "private_event_party_guest_order_pending"
+    | "private_event_deposit_pending"
     | "newsletter_signup_solved_and_closed"
     | "paypal_receipt_solved_and_closed"
     | "order_confirmation_left_open"
@@ -191,14 +194,13 @@ export async function processTicket(deps: PipelineDeps, ticketId: number): Promi
     // Still mechanical: no AI call and no comment of any kind, same as every
     // other order notification. Nobody is writing in.
     //
-    // NOTE for whoever ports Wine and Canvas's deposit/final-balance
-    // handling to this brand (it has none today - a private-event deposit
-    // here is filed as a plain Order Confirmation and Solved, e.g. #82022's
-    // $70 "Deposit - 2 Seats" line): #82022 carries BOTH a Deposit line and
-    // a Paint Party Guest line, and this branch files it as a guest order
-    // because that is the only one of the two this brand knows about. Decide
-    // the precedence with Christopher at that point rather than inheriting
-    // it from here.
+    // Deposits are handled too as of 2026-11-16 (see the branch below), so
+    // this is no longer the only private-event payment this brand knows
+    // about. The guest check stays FIRST, which keeps the four live orders
+    // carrying both a Deposit line and a Paint Party Guest line (#79922,
+    // #82241, #82022, #81605) filing exactly as they do today. Both now go
+    // Pending either way, so the precedence only decides which Reason they
+    // carry - flagged to Christopher rather than quietly reassigned.
     const guestLine = findPaintPartyGuestLineItem(description);
     if (guestLine) {
       await deps.zendesk.updateTicket(ticketId, {
@@ -211,6 +213,45 @@ export async function processTicket(deps: PipelineDeps, ticketId: number): Promi
         ruleDecision,
         matchedLocation: null,
         finalAction: "private_event_party_guest_order_pending",
+        mode: deps.mode,
+      };
+    }
+
+    // A private-event deposit. Same treatment as a guest order and for the
+    // same reason: this is private-event money the coordinator has to note
+    // against the booking, not an ordinary seat sale to be closed.
+    //
+    // Christopher, 2026-11-16, on PV order #222238 ("Deposit - 2 Seats",
+    // $100, HD Supply Holiday Party): "All orders for Deposit or Paint Party
+    // Guest should go to pending so the event coordinator can note the
+    // payment was made." Its ticket #82724 had been Solved and tagged a plain
+    // order_confirmation - as had all 32 deposit orders since 2026-08-01
+    // (31 closed, 1 solved, none ever Pending).
+    //
+    // Still mechanical: no AI call and no comment, same as every other order
+    // notification. Nobody is writing in.
+    //
+    // NOT ported from Wine and Canvas: its second-payment/Final Balance
+    // split, which keys off the event id in the SKU. This brand's line-item
+    // parser deliberately does not read that id - #82724's deposit SKU is
+    // "#222117-4-DEPOSIT---2-SEATS" on order #222238, so the second segment
+    // is far too small to be an event id and the two segments do not mean
+    // what they mean on the other brand. Every deposit here files as
+    // Private Event Deposit until those semantics are confirmed against real
+    // paired payments; private_event_final_balance exists on the field and
+    // is simply unused.
+    const depositLine = findDepositLineItem(description);
+    if (depositLine) {
+      await deps.zendesk.updateTicket(ticketId, {
+        status: "pending",
+        addTags: ruleDecision.addTags,
+        fields: [{ id: ORDER_CONFIRMATION_FIELD_ID, value: PRIVATE_EVENT_DEPOSIT_FIELD_VALUE }],
+      });
+      return {
+        ticketId,
+        ruleDecision,
+        matchedLocation: null,
+        finalAction: "private_event_deposit_pending",
         mode: deps.mode,
       };
     }

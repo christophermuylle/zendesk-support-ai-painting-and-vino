@@ -49,6 +49,15 @@ export const ORDER_CONFIRMATION_FIELD_VALUE = process.env.ORDER_CONFIRMATION_FIE
 // Order" with value "private_event_party_guest_order". Zendesk silently
 // ignores a tagger value that is not one of the field's options, so this
 // has to match exactly.
+// Christopher, 2026-11-16: "All orders for Deposit or Paint Party Guest should
+// go to pending so the event coordinator can note the payment was made." The
+// option already existed on this brand's Reason field (verified live
+// 2026-11-16: private_event_deposit => "Private Event Deposit"); nothing was
+// reading it, so every deposit order was filed as a plain Order Confirmation
+// and closed.
+export const PRIVATE_EVENT_DEPOSIT_FIELD_VALUE =
+  process.env.PRIVATE_EVENT_DEPOSIT_FIELD_VALUE ?? "private_event_deposit";
+
 export const PRIVATE_EVENT_PARTY_GUEST_ORDER_FIELD_VALUE =
   process.env.PRIVATE_EVENT_PARTY_GUEST_ORDER_FIELD_VALUE ?? "private_event_party_guest_order";
 

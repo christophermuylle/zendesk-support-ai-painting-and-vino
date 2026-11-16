@@ -481,3 +481,21 @@ export function extractOrderLineItems(text: string): OrderLineItem[] {
 export function findPaintPartyGuestLineItem(text: string): OrderLineItem | null {
   return extractOrderLineItems(text).find((i) => /paint party guest/i.test(i.name)) ?? null;
 }
+
+/**
+ * The first product line that is a private-event deposit rather than an
+ * ordinary seat purchase, or null if the order has none.
+ *
+ * The PRODUCT name is the signal, not the event name - same finding as Wine
+ * and Canvas's equivalent. Checked against this brand's live data before
+ * choosing the matcher: of the 32 order notifications since 2026-08-01 whose
+ * body mentions "deposit", every single one carries a deposit LINE ITEM, and
+ * the names run "Deposit - 2 seats", "Deposit - 2 Seats", "Deposit - 3 Seats",
+ * "Deposit - 4 Seats", "Deposit - 10 Seats", "Deposit (Covers 2 Seats)",
+ * "Deposit to hold reservation", "Deposit - Pet Art", "Deposit - 20%" and a
+ * bare "Deposit". A word-boundary match on "deposit" catches all ten shapes
+ * and nothing else - no ordinary class product on this brand carries the word.
+ */
+export function findDepositLineItem(text: string): OrderLineItem | null {
+  return extractOrderLineItems(text).find((i) => /\bdeposit\b/i.test(i.name)) ?? null;
+}
