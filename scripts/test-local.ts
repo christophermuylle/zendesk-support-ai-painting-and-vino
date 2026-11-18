@@ -1246,6 +1246,110 @@ Payment method: Visa ending in 0206`, CUSTOMER_ID)],
     },
   },
   {
+    label: 'REGRESSION (#82446, 2026-11-18): an order with a redeemed Gift Voucher is held Open for a human',
+    ctx: {
+      ticket: {
+        id: 7760,
+        subject: "[Painting and Vino]: You've got a new order: #221584",
+        description: `New order: #221584
+
+You\u2019ve received a new order from Julie Shepherd:
+
+Order summary
+Order #221584 (2026-11-18)
+
+Product Quantity Price
+
+Fall Sunset Paint and Cyder (#221500-7-FALL-SUNSET-PAINT-AND-CYDER) Fall Sunset\nSat, Nov 21st, 2026 @ 6:00 pm PST\n\u00d71 $40.00
+
+Subtotal:\t\n\t$40.00\nGift Voucher Used:\t\n\t-$20.00\nTotal:\t\n\t$20.00\nPayment method: Visa ending in 5007`,
+        status: "new", requester_id: CUSTOMER_ID, tags: [],
+        created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Julie Shepherd", email: "buyer@example.com" },
+      comments: [makeComment("order notification", CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
+  {
+    label: 'REGRESSION (2026-11-18): an order with a Discount line in the totals is held Open for a human',
+    ctx: {
+      ticket: {
+        id: 7761,
+        subject: "[Painting and Vino]: You've got a new order: #222440",
+        description: `New order: #222440
+
+You\u2019ve received a new order from Tiffany Buyer:
+
+Order summary
+Order #222440 (2026-11-18)
+
+Product Quantity Price
+
+Autumn Moon - Midtown (#222400-9-AUTUMN-MOON---MIDTOWN) Autumn Moon\nTue, Dec 1st, 2026 @ 6:00 pm PST\n\u00d72 $80.00
+
+Subtotal: $80.00\nDiscount: -$5.00\nTotal: $75.00\nPayment method: MasterCard ending in 6853`,
+        status: "new", requester_id: CUSTOMER_ID, tags: [],
+        created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Tiffany Buyer", email: "buyer@example.com" },
+      comments: [makeComment("order notification", CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
+  {
+    label: 'CONTROL (2026-11-18): a two-seat bundle PRODUCT named "2 Ticket Discount" with no Discount totals line is still solved',
+    ctx: {
+      ticket: {
+        id: 7762,
+        subject: "[Painting and Vino]: You've got a new order: #222441",
+        description: `New order: #222441
+
+You\u2019ve received a new order from Dana Bundle:
+
+Order summary
+Order #222441 (2026-11-18)
+
+Product Quantity Price
+
+2 Ticket Discount - Bigfoot Brews (#222401-9-2-TICKET-DISCOUNT---BIGFOOT-BREWS) Bigfoot Brews\nWed, Dec 2nd, 2026 @ 6:00 pm PST\n\u00d71 $80.00\n\nDuo Discount - Sunset Sail (#222402-9-DUO-DISCOUNT---SUNSET-SAIL) Sunset Sail\nWed, Dec 2nd, 2026 @ 6:00 pm PST\n\u00d71 $80.00
+
+Subtotal: $160.00\nTotal: $160.00\nPayment method: Visa ending in 2222`,
+        status: "new", requester_id: CUSTOMER_ID, tags: [],
+        created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Dana Bundle", email: "buyer@example.com" },
+      comments: [makeComment("order notification", CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
+  {
+    label: 'CONTROL (2026-11-18): BUYING a "Gift Vouchers (30% Off)" product is an ordinary sale and is still solved',
+    ctx: {
+      ticket: {
+        id: 7763,
+        subject: "[Painting and Vino]: You've got a new order: #222442",
+        description: `New order: #222442
+
+You\u2019ve received a new order from Elizabeth Buyer:
+
+Order summary
+Order #222442 (2026-11-18)
+
+Product Quantity Price
+
+Gift Vouchers (30% Off) (#222403-9-GIFT-VOUCHERS-30-OFF)\n\u00d72 $63.00
+
+Subtotal: $63.00\nTotal: $63.00\nPayment method: Visa ending in 0789`,
+        status: "new", requester_id: CUSTOMER_ID, tags: [],
+        created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      },
+      requester: { id: CUSTOMER_ID, name: "Elizabeth Buyer", email: "buyer@example.com" },
+      comments: [makeComment("order notification", CUSTOMER_ID)],
+      brand: "painting_and_vino",
+    },
+  },
+  {
     label: 'CONTROL (2026-10-22): ordinary admissions whose product names contain "Paint Party" are still Order Confirmation + Solved',
     ctx: {
       ticket: {
@@ -2151,6 +2255,65 @@ async function main() {
         `only in a customer note. Matching the body rather than the product lines is what this catches.`
     );
   }
+
+  // --- Discount codes and redeemed gift vouchers (2026-11-18) ---
+  // Christopher: "Tickets orders that have Gift Voucher or discount codes
+  // used should only be closed by a human. Same with tickets orders with $0
+  // totals."
+  //
+  // The two CONTROLs are the point of this block. Live data: of 80 recent PV
+  // order notifications, 2 carry a "Discount:" totals line but 13 contain the
+  // word "discount" - the rest are two-seat bundle PRODUCTS. And "Gift
+  // Vouchers (30% Off)" is a product someone BUYS, not a voucher redeemed.
+  for (const [label, ticketId, expectTag] of [
+    ['REGRESSION (#82446, 2026-11-18): an order with a redeemed Gift Voucher is held Open for a human', 7760, "order_gift_voucher_used"],
+    ['REGRESSION (2026-11-18): an order with a Discount line in the totals is held Open for a human', 7761, "order_discount_used"],
+  ] as Array<[string, number, string]>) {
+    const r = resultsByLabel.get(label);
+    if (!r) throw new Error(`ASSERTION FAILED: scenario "${label}" did not run`);
+    if (r.finalAction !== "order_confirmation_held_discount_or_voucher") {
+      throw new Error(
+        `ASSERTION FAILED: ${label} - produced "${r.finalAction}" instead of ` +
+          `order_confirmation_held_discount_or_voucher. Money came in short and this must not be closed ` +
+          `automatically - a Zendesk automation on this account closes solved tickets within days, and a closed ` +
+          `ticket cannot be reopened.`
+      );
+    }
+    const ups = ticketUpdates.filter((u) => u.ticketId === ticketId);
+    if (ups.map((u) => u.status).join(",") !== "open") {
+      throw new Error(
+        `ASSERTION FAILED: ${label} - status updates were ` +
+          `"${ups.map((u) => u.status ?? "unchanged").join(",") || "(none)"}", expected a single "open". Anything ` +
+          `that reaches "solved" will be auto-closed a few days later.`
+      );
+    }
+    const tags = ups[0]?.addTags ?? [];
+    for (const t of ["needs_human", expectTag]) {
+      if (!tags.includes(t)) {
+        throw new Error(
+          `ASSERTION FAILED: ${label} - expected tag "${t}", got [${tags.join(", ")}]. Without it nobody can find ` +
+            `these in a view.`
+        );
+      }
+    }
+  }
+
+  for (const [label, ticketId] of [
+    ['CONTROL (2026-11-18): a two-seat bundle PRODUCT named "2 Ticket Discount" with no Discount totals line is still solved', 7762],
+    ['CONTROL (2026-11-18): BUYING a "Gift Vouchers (30% Off)" product is an ordinary sale and is still solved', 7763],
+  ] as Array<[string, number]>) {
+    const r = resultsByLabel.get(label);
+    if (!r) throw new Error(`ASSERTION FAILED: scenario "${label}" did not run`);
+    if (r.finalAction !== "order_confirmation_solved") {
+      throw new Error(
+        `ASSERTION FAILED: ${label} - produced "${r.finalAction}" instead of order_confirmation_solved. The hold ` +
+          `is matching the WORD rather than the totals line, which on live data would hold about one in seven ` +
+          `ordinary orders ("2 Ticket Discount - Bigfoot Brews", "Duo Discount - Sunset Sail") plus every ` +
+          `gift-voucher purchase.`
+      );
+    }
+  }
+  console.log("Regression check passed: discount codes and redeemed gift vouchers are held Open for a human; discount-named products and voucher purchases still solve (2026-11-18).");
 
   const plainOrder = resultsByLabel.get(
     'CONTROL (2026-10-22): ordinary admissions whose product names contain "Paint Party" are still Order Confirmation + Solved'

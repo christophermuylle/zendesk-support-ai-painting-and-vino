@@ -34,6 +34,7 @@ import type { DraftResult, RuleDecision, TicketContext } from "./types.js";
 import {
   extractOrderTotal,
   findDepositLineItem,
+  orderDiscountOrVoucherUsed,
   findPaintPartyGuestLineItem,
   extractFormContactName,
   getLatestComment,
@@ -73,6 +74,7 @@ export interface PipelineResult {
     | "order_confirmation_solved"
     | "private_event_party_guest_order_pending"
     | "private_event_deposit_pending"
+    | "order_confirmation_held_discount_or_voucher"
     | "newsletter_signup_solved_and_closed"
     | "paypal_receipt_solved_and_closed"
     | "order_confirmation_left_open"
@@ -252,6 +254,39 @@ export async function processTicket(deps: PipelineDeps, ticketId: number): Promi
         ruleDecision,
         matchedLocation: null,
         finalAction: "private_event_deposit_pending",
+        mode: deps.mode,
+      };
+    }
+
+    // A discount code or a redeemed gift voucher. Christopher, 2026-11-18:
+    // "Tickets orders that have Gift Voucher or discount codes used should
+    // only be closed by a human. Same with tickets orders with $0 totals."
+    //
+    // Left Open with needs_human. Solving is not a safe middle ground here:
+    // a Zendesk automation on this account closes solved tickets a few days
+    // later (confirmed on #82446, solved by this service 2026-11-04 and
+    // closed by rule 2026-11-08), and a closed ticket cannot be reopened.
+    //
+    // #82446 is exactly the case this is for - a $40 seat with "Gift Voucher
+    // Used: -$20.00", solved three seconds after it arrived and auto-closed
+    // four days later. Correct under the old rules, held under these.
+    //
+    // Checked AFTER the guest and deposit branches: both of those go Pending,
+    // which is not closed either, so they already satisfy the rule and keep
+    // their own Reason. Flagged rather than assumed - say so if a voucher on
+    // a private-event payment should instead land here.
+    const reduced = orderDiscountOrVoucherUsed(description);
+    if (reduced) {
+      await deps.zendesk.updateTicket(ticketId, {
+        status: "open",
+        addTags: [...(ruleDecision.addTags ?? []), "needs_human", `order_${reduced}_used`],
+        fields: [{ id: ORDER_CONFIRMATION_FIELD_ID, value: ORDER_CONFIRMATION_FIELD_VALUE }],
+      });
+      return {
+        ticketId,
+        ruleDecision,
+        matchedLocation: null,
+        finalAction: "order_confirmation_held_discount_or_voucher",
         mode: deps.mode,
       };
     }
